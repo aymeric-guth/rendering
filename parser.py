@@ -1,49 +1,4 @@
-from lexer_types import (
-    StartExpr,
-    EndExpr,
-    LexerState,
-    Token,
-    # LiteralFloat,
-    LiteralInt,
-    Op,
-    # OpAdd,
-    # OpSub,
-    # OpMul,
-    # OpDiv,
-)
-
-
-class AstNode:
-    indent = 0
-
-    def __init__(self):
-        self.left = None
-
-    def __repr__(self):
-        return f"AST(value={self.left})"
-
-
-class BinaryOp(AstNode):
-    def __init__(self, value, *, left=None, right=None):
-        self.value = value
-        self.left = left
-        self.right = right
-        self.indent = AstNode.indent + 1
-        AstNode.indent += 1
-
-    def __repr__(self):
-        indent = "\t" * (AstNode.indent - self.indent)
-        _indent = "\t" * (AstNode.indent - self.indent - 1)
-        return f"BinaryOp(\n{indent}value={self.value}, \n{indent}left={self.left}, \n{indent}right={self.right}\n{_indent})"
-
-
-class UnaryOp(AstNode):
-    def __init__(self, value, *, left=None):
-        self.value = value
-        self.left = left
-
-    def __repr__(self):
-        return f"UnaryOp(value={self.value}, left={self.left})"
+from _types import StartExpr, EndExpr, Op, BinaryOp, LiteralInt, AstNode
 
 
 def parser(tokens):
@@ -142,5 +97,57 @@ def parserv2(tokens):
                     stack.append(node)
                 else:
                     raise RuntimeError(f"Invalid State: {tok=} {node=}")
+            elif isinstance(stack[-1], AstNode):
+                ...
             elif isinstance(stack[-1], LiteralInt):
                 raise SyntaxError(f"Invalid expression: {tok=} {node=}")
+
+
+class ParserState(Enum):
+    INIT = auto()
+    DONE = auto()
+    NEXT = auto()
+    OP = auto()
+    NUM = auto()
+
+
+def parserv3(tokens):
+    root = None
+    node = None
+    state = ParserState.INIT
+    stack = []
+
+    while 1:
+        match state:
+
+            case ParserState.INIT:
+                tok = next(tokens)
+                print(f"New Token: {tok}")
+                assert isinstance(tok, StartExpr)
+                root = AstNode()
+                state = ParserState.NEXT
+
+            case ParserState.DONE:
+                return root
+
+            case ParserState.NEXT:
+                tok = next(tokens)
+                if isinstance(tok, EndExpr):
+                    state = ParserState.DONE
+                    continue
+                elif isinstance(tok, BinaryOp):
+                    stack.append(tok)
+                    state = ParserState.OP
+                elif isinstance(tok, LiteralInt):
+                    stack.append(tok)
+                    state = ParserState.NUM
+                else:
+                    state = ParserState.NEXT
+
+            case ParserState.NUM:
+                tok = next(tokens)
+                ...
+
+            case ParserState.OP:
+                tok = next(tokens)
+                ...

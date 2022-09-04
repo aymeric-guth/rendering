@@ -129,3 +129,21 @@ def lexerv2(expr):
             case LexerState.DONE:
                 yield EndExpr()
                 return
+
+
+class Scanner:
+    def __init__(self, expr):
+        self.parsed = [i for i in lexerv2(expr)]
+        self.p = -1
+
+    def get_token(self):
+        if self.p < len(self.parsed):
+            self.p += 1
+        buf = self.parsed[self.p]
+        return buf
+
+    def peek(self):
+        if (self.p + 1) < len(self.parsed):
+            return self.parsed[self.p + 1]
+        else:
+            return self.parsed[-1]

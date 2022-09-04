@@ -65,3 +65,36 @@ class LexerState(Enum):
     PARSE_OP = auto()
     UNDEFINED = auto()
     DONE = auto()
+
+
+class AstNode:
+    indent = 0
+
+    def __init__(self):
+        self.left = None
+
+    def __repr__(self):
+        return f"AST(value={self.left})"
+
+
+class BinaryOp(AstNode):
+    def __init__(self, value, *, left=None, right=None):
+        self.value = value
+        self.left = left
+        self.right = right
+        self.indent = AstNode.indent + 1
+        AstNode.indent += 1
+
+    def __repr__(self):
+        indent = "\t" * (AstNode.indent - self.indent)
+        _indent = "\t" * (AstNode.indent - self.indent - 1)
+        return f"BinaryOp(\n{indent}value={self.value}, \n{indent}left={self.left}, \n{indent}right={self.right}\n{_indent})"
+
+
+class UnaryOp(AstNode):
+    def __init__(self, value, *, left=None):
+        self.value = value
+        self.left = left
+
+    def __repr__(self):
+        return f"UnaryOp(value={self.value}, left={self.left})"

@@ -6,10 +6,10 @@ from lexer_types import (
     # LiteralFloat,
     LiteralInt,
     Op,
-    # OpAdd,
-    # OpSub,
-    # OpMul,
-    # OpDiv,
+    OpAdd,
+    OpSub,
+    OpMul,
+    OpDiv,
 )
 
 from ast_types import BinaryOp, AstNode
@@ -31,5 +31,19 @@ def print_node(node, indent=0):
         print(f"Ast({print_node(node.left, indent+2)})")
 
 
-def compile(ast):
-    print_node(ast)
+def evaluate(node):
+    if isinstance(node, LiteralInt):
+        return node.value
+    elif isinstance(node, BinaryOp):
+        if isinstance(node.value, OpAdd):
+            return evaluate(node.left) + evaluate(node.right)
+        elif isinstance(node.value, OpMul):
+            return evaluate(node.left) * evaluate(node.right)
+        elif isinstance(node.value, OpSub):
+            return evaluate(node.left) - evaluate(node.right)
+        elif isinstance(node.value, OpDiv):
+            return evaluate(node.left) / evaluate(node.right)
+    elif node is None:
+        ...
+    else:
+        raise RuntimeError(f"Invalid NodeType: {node}")
