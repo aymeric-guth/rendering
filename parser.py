@@ -1,3 +1,4 @@
+from enum import Enum, auto
 from _types import StartExpr, EndExpr, Op, BinaryOp, LiteralInt, AstNode
 
 
@@ -144,10 +145,9 @@ def parserv3(tokens):
                 else:
                     state = ParserState.NEXT
 
-            case ParserState.NUM:
-                tok = next(tokens)
-                ...
 
-            case ParserState.OP:
-                tok = next(tokens)
-                ...
+def parserv4(scanner):
+    if isinstance(scanner.peek(), StartExpr):
+        ...
+    elif isinstance(scanner.peek(), EndExpr):
+        ...

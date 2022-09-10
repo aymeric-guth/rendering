@@ -1,18 +1,12 @@
-from lexer_types import (
-    StartExpr,
-    EndExpr,
-    LexerState,
-    Token,
-    # LiteralFloat,
+from _types import (
     LiteralInt,
-    Op,
     OpAdd,
     OpSub,
     OpMul,
     OpDiv,
+    BinaryOp,
+    AstNode,
 )
-
-from ast_types import BinaryOp, AstNode
 
 
 def print_node(node, indent=0):
@@ -31,18 +25,31 @@ def print_node(node, indent=0):
         print(f"Ast({print_node(node.left, indent+2)})")
 
 
-def evaluate(node):
+def evaluate(node, precedence=-1):
     if isinstance(node, LiteralInt):
         return node.value
     elif isinstance(node, BinaryOp):
-        if isinstance(node.value, OpAdd):
-            return evaluate(node.left) + evaluate(node.right)
-        elif isinstance(node.value, OpMul):
-            return evaluate(node.left) * evaluate(node.right)
-        elif isinstance(node.value, OpSub):
-            return evaluate(node.left) - evaluate(node.right)
-        elif isinstance(node.value, OpDiv):
-            return evaluate(node.left) / evaluate(node.right)
+        if node.value.precedence > precedence:
+            if isinstance(node.value, OpAdd):
+                return evaluate(node.left, node.value.precedence) + evaluate(
+                    node.right, node.value.precedence
+                )
+            elif isinstance(node.value, OpMul):
+                return evaluate(node.left) * evaluate(node.right)
+            elif isinstance(node.value, OpSub):
+                return evaluate(node.left) - evaluate(node.right)
+            elif isinstance(node.value, OpDiv):
+                return evaluate(node.left) / evaluate(node.right)
+            ...
+        else:
+            if isinstance(node.value, OpAdd):
+                return evaluate(node.left) + evaluate(node.right)
+            elif isinstance(node.value, OpMul):
+                return evaluate(node.left) * evaluate(node.right)
+            elif isinstance(node.value, OpSub):
+                return evaluate(node.left) - evaluate(node.right)
+            elif isinstance(node.value, OpDiv):
+                return evaluate(node.left) / evaluate(node.right)
     elif node is None:
         ...
     else:

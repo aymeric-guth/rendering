@@ -1,5 +1,5 @@
 from lexer import lexer, lexerv2, Scanner, EndExpr
-from ast_types import parser, parserv2, parserv3
+from parser import parser, parserv2, parserv3
 from interpreter import evaluate, print_node
 
 

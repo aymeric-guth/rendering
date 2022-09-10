@@ -6,7 +6,6 @@ int main() {
   char *num_buf[2048] = {"\0"};
   char **expr_buffer[2048];
 
-  for (int i = 0; i < strlen(expr); i++) {
+  for (int i = 0; i < strlen(expr); i++)
     printf("%c\n", *(expr + i));
-  }
 }

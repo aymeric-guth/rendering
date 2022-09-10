@@ -1,6 +1,6 @@
 import re
 
-from lexer_types import (
+from _types import (
     StartExpr,
     EndExpr,
     LexerState,
