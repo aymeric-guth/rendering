@@ -18,6 +18,8 @@ start_directory: $WORKSPACE
 # options:
 #   main-pane-height: ${MAIN_PANE_HEIGHT}
 
+shell_command_before:
+- '[ -f .func.sh ] && source .func.sh'
 windows:
   - window_name: editor
     # options:
