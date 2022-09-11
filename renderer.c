@@ -8,29 +8,8 @@
 #include "utilz.h"
 
 #define SIZE 100
-#define PIXELS 13
 #define SCREEN_WIDTH 124
-#define SCREEN_HEIGHT 33 - 2
-
-const char *pixels[] = {" ", ".", ",", "-", "~", ":", ";", "=", "!", "*", "#", "$", "@"};
-
-void print_space(int space[SIZE][SIZE][SIZE])
-{
-    for (int k = 0; k < SIZE; k++) {
-        printf("[");
-
-        for (int j = 0; j < SIZE; j++) {
-            printf("[");
-
-            for (int i = 0; i < SIZE; i++)
-                printf("%d, ", space[k][j][i]);
-
-            printf("],\n");
-        }
-
-        printf("],\n");
-    }
-}
+#define SCREEN_HEIGHT 33
 
 
 int get_index(int idx, int size)
@@ -41,26 +20,6 @@ int get_index(int idx, int size)
         return idx - size;
     else
         return idx;
-}
-
-int xshift(int space[SIZE][SIZE][SIZE], int idx)
-{
-    if (idx >= SIZE || idx <= -SIZE)
-        return -1;
-
-    for (int k = 0; k < SIZE; k++) {
-        for (int j = 0; j < SIZE; j++) {
-            int buff[SIZE] = {0};
-
-            for (int i = 0; i < SIZE; i++)
-                buff[i] = space[k][j][i];
-
-            for (int i = 0; i < SIZE; i++)
-                space[k][j][get_index(i + idx, SIZE)] = buff[i];
-        }
-    }
-
-    return 0;
 }
 
 int yshift(int space[SIZE][SIZE][SIZE], int idx)
@@ -111,97 +70,107 @@ void xinit(int space[SIZE][SIZE][SIZE], int initializer)
     }
 }
 
-void init(int space[SIZE][SIZE][SIZE], int initializer)
-{
-    for (int k = 0; k < SIZE; k++) {
-        for (int j = 0; j < SIZE; j++)
-            for (int i = 0; i < SIZE; i++)
-                space[k][j][i] = initializer;
-    }
-}
-
-void transform2d(int space[SIZE][SIZE][SIZE], char space2d[SCREEN_WIDTH][SCREEN_HEIGHT])
+void transform2d(int space[SIZE][SIZE][SIZE], int space2d[SCREEN_HEIGHT][SCREEN_WIDTH])
 {
     const float R1 = 1;
     const float R2 = 2;
     const float K2 = 5;
     const float K1 = (float)SCREEN_WIDTH * K2 * 3 / (8 * (R1 + R2));
-    float zbuffer[SCREEN_WIDTH][SCREEN_HEIGHT] = {0};
-    float offset = (float) SIZE / 2;
+    float zbuffer[SCREEN_HEIGHT][SCREEN_WIDTH] = {0};
+    float offset = SIZE / 2.f;
 
     for (int k = 0; k < SIZE; k++) {
         for (int j = 0; j < SIZE; j++) {
             for (int i = 0; i < SIZE; i++) {
-                float x = i;
-                float y = j;
-                float z = k;
-                float ooz = 1.f / z;
-                int L = space[k][j][i];
+                float x = i - offset;
+                float y = j - offset;
+                float z = k - offset + K2;
+                float ooz = (!z) ? (float)SIZE : 1.f / z;
                 int xp = (int)(((float)SCREEN_WIDTH / 2.f) + (K1 * ooz * x));
                 int yp = (int)(((float)SCREEN_HEIGHT / 2.f) - (K1 * ooz * y));
-                xp = clamp(SCREEN_WIDTH, 0, xp);
-                yp = clamp(SCREEN_HEIGHT, 0, yp);
-                space2d[yp][xp] = *pixels[L];
+                xp = clamp(SCREEN_WIDTH - 1, 0, xp);
+                yp = clamp(SCREEN_HEIGHT - 1, 0, yp);
+
+                //xp = clamp(SCREEN_WIDTH, 0, xp);
+                //yp = clamp(SCREEN_HEIGHT, 0, yp);
+
+                //if (xp > SCREEN_WIDTH || yp > SCREEN_HEIGHT || space[k][j][i] > 12)
+                //    printf("xp=%d, yp=%d, i=%d, j=%d, k=%d, x=%f, y=%f, z=%f", xp, yp, i, j, k, x, y, z);
+
+                if (ooz > zbuffer[yp][xp]) {
+                    zbuffer[yp][xp] = ooz;
+                    space2d[yp][xp] = space[k][j][i];
+                }
             }
         }
     }
 }
 
-void render(char space2d[SCREEN_WIDTH][SCREEN_HEIGHT])
+void render(int space2d[SCREEN_HEIGHT][SCREEN_WIDTH])
 {
-    printf("\x1b[H");
+    //printf("\x1b[H");
 
+    // printf("\e[1;1H\e[2J");
     for (int j = 0; j < SCREEN_HEIGHT; j++) {
-        for (int i = 0; i < SCREEN_WIDTH; i++)
-            printf("%c", space2d[j][i]);
+        for (int i = 0; i < SCREEN_WIDTH; i++) {
+            int L = space2d[j][i];
+            printf("%c", " .,-~:;=!*#$@"[L]);
+        }
 
         printf("\n");
     }
 }
 
-int msleep(long msec)
+int xshift(int space[SIZE][SIZE][SIZE], int idx)
 {
-    struct timespec ts;
-    int res;
-
-    if (msec < 0) {
-        errno = EINVAL;
+    if (idx >= SIZE || idx <= -SIZE)
         return -1;
+
+    for (int k = 0; k < SIZE; k++) {
+        for (int j = 0; j < SIZE; j++) {
+            int buff[SIZE] = {0};
+
+            for (int i = 0; i < SIZE; i++)
+                buff[i] = space[k][j][i];
+
+            for (int i = 0; i < SIZE; i++)
+                space[k][j][get_index(i + idx, SIZE)] = buff[i];
+        }
     }
 
-    ts.tv_sec = msec / 1000;
-    ts.tv_nsec = (msec % 1000) * 1000000;
-
-    do {
-        res = nanosleep(&ts, &ts);
-    } while (res && errno == EINTR);
-
-    return res;
+    return 0;
 }
 
 int main()
 {
-    int space[SIZE][SIZE][SIZE] = {0x0};
-    init(space, 12);
-    int i = 0;
+    int space[SIZE][SIZE][SIZE] = {0};
+    int L = 12;
 
-    while (1) {
-        char output[SCREEN_WIDTH][SCREEN_HEIGHT] = {' '};
-        transform2d(space, output);
-        render(output);
-
-        if (i >= SIZE)
-            i = 0;
-
-        xshift(space, i);
-        msleep(1);
+    for (int i = 0; i < SIZE; i++) {
+        space[0][0][i] = L;
+        space[0][SIZE - 1][i] = L;
+        space[SIZE - 1][0][i] = L;
+        space[SIZE - 1][SIZE - 1][i] = L;
     }
 
-    //r =
-    //r = yshift(space, 0);
-    // r = zshift(space, 0);
-    // if (r)
-    //     return 1;
-    // print_space(space);
+    for (int k = 0; k < SIZE; k++) {
+        space[k][0][0] = L;
+        space[k][0][SIZE - 1] = L;
+        space[k][SIZE - 1][0] = L;
+        space[k][SIZE - 1][SIZE - 1] = L;
+    }
+
+    //xinit(space, 12);
+    int it = -1;
+
+    while (1) {
+        int output[SCREEN_HEIGHT][SCREEN_WIDTH] = {0};
+        transform2d(space, output);
+        render(output);
+        it = (it >= SIZE) ? 0 : it + 1;
+        //xshift(space, it);
+        msleep(100);
+    }
+
     return 0;
 }
