@@ -9,5 +9,5 @@ build() {
 run() {
   [ ! "$(basename "$PWD")" = "$PROJECT_NAME" ] && return 1
   build
-  ./build/"$PROJECT_NAME"
+  ./build/"$PROJECT_NAME" && echo "$?"
 }

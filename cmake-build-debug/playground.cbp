@@ -17,8 +17,8 @@
 					<DistClean command="/opt/local/bin/gmake -j8 -f &quot;/Users/yul/Desktop/dev/Network/playground/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
-			<Target title="a.out">
-				<Option output="/Users/yul/Desktop/dev/Network/playground/cmake-build-debug/a.out" prefix_auto="0" extension_auto="0"/>
+			<Target title="playground">
+				<Option output="/Users/yul/Desktop/dev/Network/playground/cmake-build-debug/playground" prefix_auto="0" extension_auto="0"/>
 				<Option working_dir="/Users/yul/Desktop/dev/Network/playground/cmake-build-debug"/>
 				<Option object_output="./"/>
 				<Option type="1"/>
@@ -30,14 +30,14 @@
 					<Add directory="/Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk/System/Library/Frameworks"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/opt/local/bin/gmake -j8 -f &quot;/Users/yul/Desktop/dev/Network/playground/cmake-build-debug/Makefile&quot;  VERBOSE=1 a.out"/>
+					<Build command="/opt/local/bin/gmake -j8 -f &quot;/Users/yul/Desktop/dev/Network/playground/cmake-build-debug/Makefile&quot;  VERBOSE=1 playground"/>
 					<CompileFile command="/opt/local/bin/gmake -j8 -f &quot;/Users/yul/Desktop/dev/Network/playground/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
 					<Clean command="/opt/local/bin/gmake -j8 -f &quot;/Users/yul/Desktop/dev/Network/playground/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
 					<DistClean command="/opt/local/bin/gmake -j8 -f &quot;/Users/yul/Desktop/dev/Network/playground/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
-			<Target title="a.out/fast">
-				<Option output="/Users/yul/Desktop/dev/Network/playground/cmake-build-debug/a.out" prefix_auto="0" extension_auto="0"/>
+			<Target title="playground/fast">
+				<Option output="/Users/yul/Desktop/dev/Network/playground/cmake-build-debug/playground" prefix_auto="0" extension_auto="0"/>
 				<Option working_dir="/Users/yul/Desktop/dev/Network/playground/cmake-build-debug"/>
 				<Option object_output="./"/>
 				<Option type="1"/>
@@ -49,7 +49,7 @@
 					<Add directory="/Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk/System/Library/Frameworks"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/opt/local/bin/gmake -j8 -f &quot;/Users/yul/Desktop/dev/Network/playground/cmake-build-debug/Makefile&quot;  VERBOSE=1 a.out/fast"/>
+					<Build command="/opt/local/bin/gmake -j8 -f &quot;/Users/yul/Desktop/dev/Network/playground/cmake-build-debug/Makefile&quot;  VERBOSE=1 playground/fast"/>
 					<CompileFile command="/opt/local/bin/gmake -j8 -f &quot;/Users/yul/Desktop/dev/Network/playground/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
 					<Clean command="/opt/local/bin/gmake -j8 -f &quot;/Users/yul/Desktop/dev/Network/playground/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
 					<DistClean command="/opt/local/bin/gmake -j8 -f &quot;/Users/yul/Desktop/dev/Network/playground/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
@@ -77,7 +77,7 @@
 			</Target>
 		</Build>
 		<Unit filename="/Users/yul/Desktop/dev/Network/playground/renderer.c">
-			<Option target="a.out"/>
+			<Option target="playground"/>
 		</Unit>
 		<Unit filename="/Users/yul/Desktop/dev/Network/playground/CMakeLists.txt">
 			<Option virtualFolder="CMake Files\"/>

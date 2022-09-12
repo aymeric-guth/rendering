@@ -2,7 +2,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "a.out"
+			"path" : "playground"
 		}
 	],
 	"backtrace" : 1,
@@ -64,7 +64,7 @@
 			]
 		}
 	],
-	"id" : "a.out::@6890427a1f51a3e7e1df",
+	"id" : "playground::@6890427a1f51a3e7e1df",
 	"link" : 
 	{
 		"commandFragments" : 
@@ -80,8 +80,8 @@
 		],
 		"language" : "C"
 	},
-	"name" : "a.out",
-	"nameOnDisk" : "a.out",
+	"name" : "playground",
+	"nameOnDisk" : "playground",
 	"paths" : 
 	{
 		"build" : ".",

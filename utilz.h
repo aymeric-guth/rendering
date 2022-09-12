@@ -43,3 +43,14 @@ int msleep(long msec)
 
     return res;
 }
+
+float linear_interpolation(
+    float src_min,
+    float src_max,
+    float dst_min,
+    float dst_max,
+    float x
+)
+{
+    return (x - src_min) * (dst_max - dst_min) / (src_max - src_min) + dst_min;
+}

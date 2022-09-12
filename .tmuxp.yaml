@@ -1,5 +1,7 @@
 session_name: $PROJECT_NAME
 start_directory: $WORKSPACE
+environment:
+  PROJECT_NAME: $PROJECT_NAME
 
 # before_script: ./.tmuxp-before-script.sh
 # shell_command_before:

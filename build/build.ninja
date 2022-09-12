@@ -41,8 +41,8 @@ cmake_ninja_workdir = /Users/yul/Desktop/dev/Network/playground/build/
 
 build cmake_object_order_depends_target_playground: phony || CMakeFiles/playground.dir
 
-build CMakeFiles/playground.dir/renderer.c.o: C_COMPILER__playground_ /Users/yul/Desktop/dev/Network/playground/renderer.c || cmake_object_order_depends_target_playground
-  DEP_FILE = CMakeFiles/playground.dir/renderer.c.o.d
+build CMakeFiles/playground.dir/renderervec.c.o: C_COMPILER__playground_ /Users/yul/Desktop/dev/Network/playground/renderervec.c || cmake_object_order_depends_target_playground
+  DEP_FILE = CMakeFiles/playground.dir/renderervec.c.o.d
   FLAGS = -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.15 -W -Wall -Werror
   OBJECT_DIR = CMakeFiles/playground.dir
   OBJECT_FILE_DIR = CMakeFiles/playground.dir
@@ -57,7 +57,7 @@ build CMakeFiles/playground.dir/renderer.c.o: C_COMPILER__playground_ /Users/yul
 #############################################
 # Link the executable playground
 
-build playground: C_EXECUTABLE_LINKER__playground_ CMakeFiles/playground.dir/renderer.c.o
+build playground: C_EXECUTABLE_LINKER__playground_ CMakeFiles/playground.dir/renderervec.c.o
   FLAGS = -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.15
   OBJECT_DIR = CMakeFiles/playground.dir
   POST_BUILD = :

@@ -2,51 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/signal.h>
 
+#include "constants.h"
 #include "utilz.h"
-
-#define SIZE3D 100
-#define SCREEN_WIDTH 124 / 2
-#define SCREEN_HEIGHT 33
-#define DEBUG 0
-#define CYCLES 100
-
-
-typedef enum { NONE, BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE } Color;
-
-typedef struct {
-    int shader;
-    Color color;
-} Pixel;
-
-const char *color_map[] = {
-    [NONE] = "",
-    [BLACK] = "\x1b[30;1m",
-    [RED] = "\x1b[31;1m",
-    [GREEN] = "\x1b[32;1m",
-    [YELLOW] = "\x1b[33;1m",
-    [BLUE] = "\x1b[34;1m",
-    [MAGENTA] = "\x1b[35;1m",
-    [CYAN] = "\x1b[36;1m",
-    [WHITE] = "\x1b[37;1m",
-};
-
-
-void moveline(int space3d[SIZE3D][SIZE3D][SIZE3D], int n)
-{
-    int L = 1;
-
-    for (int k = 0; k < SIZE3D; k++) {
-        for (int j = 0; j < SIZE3D; j++) {
-            for (int i = 0; i < SIZE3D; i++)
-                space3d[k][j][i] = 0;
-
-            space3d[k][j][n] = L;
-            //for (int i = n; i < SIZE3D; i++)
-            //    space3d[k][j][i] = L;
-        }
-    }
-}
 
 void render(Pixel space2d[SCREEN_HEIGHT][SCREEN_WIDTH])
 {
@@ -62,29 +21,16 @@ void render(Pixel space2d[SCREEN_HEIGHT][SCREEN_WIDTH])
                 printf("%s", color);
             }
 
-            printf("%c%c\x1b[0m", c, c);
+            printf("%c\x1b[0m", c);
         }
 
         printf("\n");
     }
 }
 
-
-float linear_interpolation(
-    float src_min,
-    float src_max,
-    float dst_min,
-    float dst_max,
-    float x
-)
-{
-    return (x - src_min) * (dst_max - dst_min) / (src_max - src_min) + dst_min;
-}
-
 void transform(
     Pixel space3d[SIZE3D][SIZE3D][SIZE3D],
-    Pixel space2d[SCREEN_HEIGHT][SCREEN_WIDTH],
-    float zoom
+    Pixel space2d[SCREEN_HEIGHT][SCREEN_WIDTH]
 )
 {
     float zbuffer[SCREEN_HEIGHT][SCREEN_WIDTH];
@@ -97,7 +43,7 @@ void transform(
     // camera distance from the screen
     float K1 = 1.f;
     // screen distance from the scene
-    float K2 = 1.f * zoom;
+    float K2 = 1.f;
 
     for (int k = 0; k < SIZE3D; k++) {
         for (int j = 0; j < SIZE3D; j++) {
@@ -159,6 +105,29 @@ void colorize(Pixel space3d[SIZE3D][SIZE3D][SIZE3D])
     }
 }
 
+void init(Pixel space3d[SIZE3D][SIZE3D][SIZE3D], Pixel space2d[SCREEN_HEIGHT][SCREEN_WIDTH])
+{
+    Pixel *px = NULL;
+
+    for (int k = 0; k < SIZE3D; k++) {
+        for (int j = 0; j < SIZE3D; j++) {
+            for (int i = 0; i < SIZE3D; i++) {
+                px = &space3d[k][j][i];
+                px->color = NONE;
+                px->shader = 1;
+            }
+        }
+    }
+
+    for (int j = 0; j < SCREEN_HEIGHT; j++) {
+        for (int i = 0; i < SCREEN_WIDTH; i++) {
+            px = &space2d[j][i];
+            px->shader = 0;
+            px->color = NONE;
+        }
+    }
+}
+
 int main()
 {
     Pixel space3d[SIZE3D][SIZE3D][SIZE3D];
@@ -181,15 +150,25 @@ int main()
     }
 
     colorize(space3d);
-    // transform(space3d, space2d);
-    // return 0;
+    // clear screen
+    printf("\033[2J");
+    // hide cursor
+    printf("\e[?25l");
 
     for (int n = 0; n < CYCLES; n++) {
         // moveline(space3d, n);
-        transform(space3d, space2d, 3.f);
+        transform(space3d, space2d);
         render(space2d);
-        msleep(17);
+        msleep(FRAME);
+        // init(space3d, space2d);
+        // colorize(space3d);
+        // zoom += 0.1f;
+        // clearscreen();
     }
 
+    goto cleanup;
+cleanup:
+    // show cursor
+    printf("\e[?25h");
     return 0;
 }

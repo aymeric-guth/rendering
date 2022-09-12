@@ -38,9 +38,9 @@
 			[
 				{
 					"directoryIndex" : 0,
-					"id" : "a.out::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-a.out-Debug-90e94b918bc14d58aaa8.json",
-					"name" : "a.out",
+					"id" : "playground::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-playground-Debug-5dbad35e8b5ef8caa090.json",
+					"name" : "playground",
 					"projectIndex" : 0
 				}
 			]

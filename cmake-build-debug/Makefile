@@ -117,24 +117,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named a.out
+# Target rules for targets named playground
 
 # Build rule for target.
-a.out: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 a.out
-.PHONY : a.out
+playground: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 playground
+.PHONY : playground
 
 # fast build rule for target.
-a.out/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/a.out.dir/build.make CMakeFiles/a.out.dir/build
-.PHONY : a.out/fast
+playground/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/playground.dir/build.make CMakeFiles/playground.dir/build
+.PHONY : playground/fast
 
 renderer.o: renderer.c.o
 .PHONY : renderer.o
 
 # target to build an object file
 renderer.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/a.out.dir/build.make CMakeFiles/a.out.dir/renderer.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/playground.dir/build.make CMakeFiles/playground.dir/renderer.c.o
 .PHONY : renderer.c.o
 
 renderer.i: renderer.c.i
@@ -142,7 +142,7 @@ renderer.i: renderer.c.i
 
 # target to preprocess a source file
 renderer.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/a.out.dir/build.make CMakeFiles/a.out.dir/renderer.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/playground.dir/build.make CMakeFiles/playground.dir/renderer.c.i
 .PHONY : renderer.c.i
 
 renderer.s: renderer.c.s
@@ -150,7 +150,7 @@ renderer.s: renderer.c.s
 
 # target to generate assembly for a file
 renderer.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/a.out.dir/build.make CMakeFiles/a.out.dir/renderer.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/playground.dir/build.make CMakeFiles/playground.dir/renderer.c.s
 .PHONY : renderer.c.s
 
 # Help Target
@@ -161,7 +161,7 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... a.out"
+	@echo "... playground"
 	@echo "... renderer.o"
 	@echo "... renderer.i"
 	@echo "... renderer.s"
