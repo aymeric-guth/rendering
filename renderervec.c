@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/signal.h>
+#include <math.h>
 
 #include "constants.h"
 #include "utilz.h"
@@ -16,88 +17,14 @@ void clearscreen(void)
     //printf("\033[2J"); // Clear screen
     for (int j = 0; j < SCREEN_HEIGHT; j++) {
         for (int i = 0; i < SCREEN_WIDTH * 2; i++) {
-            printf("\x1b[H");
-            printf("\033[%d;%dH", j, i);
-            printf("^");
-        }
-    }
-}
-
-void render(Pixel_A *space2d)
-{
-    //printf("\033[XA"); // Move up X lines;
-    //printf("\033[XB"); // Move down X lines;
-    //printf("\033[XC"); // Move right X column;
-    //printf("\033[XD"); // Move left X column;
-    //printf("\033[2J"); // Clear screen
-    Pixel_A *px = space2d;
-
-    for (int j = 0; j < SCREEN_HEIGHT; j++) {
-        for (int i = 0; i < SCREEN_WIDTH * 2; i++) {
-            printf("\x1b[H");
+            // printf("\x1b[H");
+            // move cursor to (x, y)
             printf("\033[%d;%dH", j, i);
             printf(" ");
         }
     }
 
-    while (px) {
-        //printf("\x1b[H");
-        //printf("\033[%dC", (int)px->x);
-        //printf("\033[%dB", (int)px->y);
-        char c = " .,-~:;=!*#$@"[px->shader];
-        const char *color = color_map[px->color];
-        // enable color
-        printf("%s", color);
-        // move cursor to (x, y)
-        printf("\033[%d;%dH", (int)px->y, (int)px->x * 2);
-        printf("%c", c);
-        printf("\033[%d;%dH", (int)px->y, (int)px->x * 2 + 1);
-        printf("%c", c);
-        // disable color
-        printf("\x1b[0m");
-        px++;
-    }
-}
-
-void transform(Pixel_A *space3d, Pixel_A *space2d, float zoom)
-{
-    float zbuffer[SCREEN_HEIGHT][SCREEN_WIDTH];
-
-    for (int j = 0; j < SCREEN_HEIGHT; j++) {
-        for (int i = 0; i < SCREEN_WIDTH; i++)
-            zbuffer[j][i] = 0.f;
-    }
-
-    // camera distance from the screen
-    float K1 = 1.f;
-    // screen distance from the scene
-    float K2 = 1.f + zoom;
-
-    for (int i = 0; i < SIZE3D * SIZE3D * SIZE3D; i++) {
-        float ooz = 1.f / (space3d->z + K1 + K2);
-        float x1 = space3d->x * K1 * ooz;
-        float y1 = space3d->y * K1 * ooz;
-        int xp = (int)((float)SCREEN_WIDTH / 2 + x1);
-        int yp = (int)((float)SCREEN_HEIGHT / 2 + y1);
-
-        // OOB check
-        if (xp > (SCREEN_WIDTH - 1) || xp < 0 || yp > (SCREEN_HEIGHT - 1) || yp < 0) {
-            space3d++;
-            continue;
-        }
-
-        if (ooz > zbuffer[yp][xp]) {
-            zbuffer[yp][xp] = ooz;
-            space2d->x = (float)xp;
-            space2d->y = (float)yp;
-            space2d->z = 0.f;
-            space2d->color = space3d->color;
-            space2d->shader = space3d->shader;
-            space2d++;
-        }
-
-        space3d++;
-    }
+    // printf("\033[2J");
 }
 
 void colorize(Pixel space3d[SIZE3D][SIZE3D][SIZE3D])
@@ -130,23 +57,164 @@ void colorize(Pixel space3d[SIZE3D][SIZE3D][SIZE3D])
     }
 }
 
+void rendervec(Pixel_A *framebuff)
+{
+    Pixel_A *px = framebuff;
+
+    while (px) {
+        //printf("\x1b[H");
+        //printf("\033[%dC", (int)px->x);
+        //printf("\033[%dB", (int)px->y);
+        char c = " .,-~:;=!*#$@"[px->shader];
+        const char *color = color_map[px->color];
+        // enable color
+        printf("%s", color);
+        // move cursor to (x, y)
+        printf("\033[%d;%dH", (int)px->y, (int)px->x * 2);
+        printf("%c", c);
+        // printf("\033[%d;%dH", (int)px->y, (int)px->x * 2 + 1);
+        // printf("%c", c);
+        // disable color
+        printf("\x1b[0m");
+        px++;
+    }
+}
+
+void render(Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH])
+{
+    Pixel *px = NULL;
+
+    for (int j = 0; j < SCREEN_HEIGHT; j++) {
+        for (int i = 0; i < SCREEN_WIDTH; i++) {
+            px = framebuff[j][i];
+            char c = " .,-~:;=!*#$@"[px->shader];
+            const char *color = color_map[px->color];
+            // enable color
+            printf("%s", color);
+            // move cursor to (x, y)
+            printf("\033[%d;%dH", j, i * 2);
+            printf("%c", c);
+            // printf("\033[%d;%dH", (int)px->y, (int)px->x * 2 + 1);
+            // disable color
+            printf("\x1b[0m");
+        }
+    }
+}
+
+void rot_yaw(Pixel_A *vec3, float theta)
+{
+    float cos_theta = cosf(theta);
+    float sin_theta = sinf(theta);
+    float x = vec3->x;
+    float y = vec3->y;
+    vec3->x = x * cos_theta - (x * sin_theta);
+    vec3->y = y * sin_theta + y * cos_theta;
+}
+
+void rot_pitch(Pixel_A *vec3, float theta)
+{
+    float cos_theta = cosf(theta);
+    float sin_theta = sinf(theta);
+    float x = vec3->x;
+    float z = vec3->z;
+    vec3->x = x * cos_theta + x * sin_theta;
+    vec3->z = -(z * sin_theta) + z * cos_theta;
+}
+
+void rot_roll(Pixel_A *vec3, float theta)
+{
+    float cos_theta = cosf(theta);
+    float sin_theta = sinf(theta);
+    float y = vec3->y;
+    float z = vec3->z;
+    vec3->y = y * cos_theta - (y * sin_theta);
+    vec3->z = -(z * sin_theta) + z * cos_theta;
+}
+
+void transform(Pixel_A *space3d, Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH], float zoom)
+{
+    float zbuffer[SCREEN_HEIGHT][SCREEN_WIDTH];
+
+    for (int j = 0; j < SCREEN_HEIGHT; j++) {
+        for (int i = 0; i < SCREEN_WIDTH; i++)
+            zbuffer[j][i] = 0.f;
+    }
+
+    // camera distance from the screen
+    const float K1 = -1.f;
+    // screen distance from the scene
+    const float K2 = -1.f + zoom;
+
+    for (int i = 0; i < SIZE3D * SIZE3D * SIZE3D; i++) {
+        float z = space3d->z + K1 + K2;
+        float ooz = 1.f / sqrtf(z * z);
+        float x1 = space3d->x * ooz;
+        float y1 = space3d->y * ooz;
+        int xp = (int)((float)SCREEN_WIDTH / 2 + x1);
+        int yp = (int)((float)SCREEN_HEIGHT / 2 - y1);
+
+        // OOB check
+        if (xp > (SCREEN_WIDTH - 1) || xp < 0 || yp > (SCREEN_HEIGHT - 1) || yp < 0) {
+            space3d++;
+            continue;
+        }
+
+        if (ooz > zbuffer[yp][xp]) {
+            zbuffer[yp][xp] = ooz;
+            {
+                Pixel *p = framebuff[yp][xp];
+                p->shader = space3d->shader;
+                p->color = space3d->color;
+            }
+        }
+
+        space3d++;
+    }
+}
+
+void init_framebuff(Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH])
+{
+    Pixel *p = NULL;
+
+    for (int j = 0; j < SCREEN_HEIGHT; j++)
+        for (int i = 0; i < SCREEN_WIDTH; i++) {
+            p = framebuff[j][i];
+            p->shader = 0;
+            p->color = NONE;
+        }
+}
+
 int main()
 {
     Pixel space3d[SIZE3D][SIZE3D][SIZE3D];
-    Pixel_A *p = NULL;
-    Pixel_A *pr = NULL;
-    p = (Pixel_A *) malloc(sizeof(Pixel_A) * SIZE3D * SIZE3D * SIZE3D);
+    Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH];
+    Pixel_A *p = (Pixel_A *) malloc(sizeof(Pixel_A) * SIZE3D * SIZE3D * SIZE3D);
 
     if (!p)
-        return 1;
+        goto cleanup;
 
-    pr = (Pixel_A *) malloc(sizeof(Pixel_A) * SCREEN_HEIGHT * SCREEN_WIDTH);
+    Pixel_A *p1 = (Pixel_A *) malloc(sizeof(Pixel_A) * SIZE3D * SIZE3D * SIZE3D);
 
-    if (!pr)
+    if (!p1)
+        goto cleanup;
+
+    Pixel *fb = (Pixel *) malloc(sizeof(Pixel) * SCREEN_WIDTH * SCREEN_HEIGHT);
+
+    if (!fb)
         goto cleanup;
 
     memset(p, 0, sizeof(Pixel_A) * SIZE3D * SIZE3D * SIZE3D);
-    memset(p, 0, sizeof(Pixel_A) * SCREEN_WIDTH * SCREEN_HEIGHT);
+    memset(p1, 0, sizeof(Pixel_A) * SIZE3D * SIZE3D * SIZE3D);
+    memset(fb, 0, sizeof(Pixel) * SCREEN_WIDTH * SCREEN_HEIGHT);
+    {
+        Pixel *fbp = fb;
+
+        for (int j = 0; j < SCREEN_HEIGHT; j++)
+            for (int i = 0; i < SCREEN_WIDTH; i++) {
+                framebuff[j][i] = fbp;
+                fbp++;
+            }
+    }
 
     for (int k = 0; k < SIZE3D; k++) {
         for (int j = 0; j < SIZE3D; j++) {
@@ -166,7 +234,7 @@ int main()
                 for (int i = 0; i < SIZE3D; i++) {
                     px->x = (float)i - (float)SIZE3D / 2;
                     px->y = (float)j - (float)SIZE3D / 2;
-                    px->z = (float)k;
+                    px->z = -1.f * (float)k;
                     px->color = space3d[k][j][i].color;
                     px->shader = space3d[k][j][i].shader;
                     px++;
@@ -177,16 +245,30 @@ int main()
     // clear screen
     printf("\033[2J");
     // hide cursor
-    // printf("\e[?25l");
-    float zoom = 1.f;
+    printf("\e[?25l");
+    float zoom = -3.f;
+    float theta = 0.f;
+    float a = 0.f;
 
     for (int n = 0; n < CYCLES; n++) {
-        transform(p, pr, zoom);
-        clearscreen();
-        render(pr);
-        msleep(20);
-        zoom += 1.f;
-        memset(pr, 0, sizeof(Pixel_A) * SCREEN_WIDTH * SCREEN_HEIGHT);
+        {
+            memcpy(p1, p, sizeof(Pixel_A)*SPACE);
+            Pixel_A *px = p1;
+
+            for (int i = 0; i < SPACE; i++) {
+                // rot_pitch(px, theta);
+                // rot_yaw(px, theta);
+                // rot_roll(px, theta);
+                px++;
+            }
+        }
+        transform(p1, framebuff, zoom);
+        render(framebuff);
+        msleep(100);
+        // re-init frame-buffer
+        init_framebuff(framebuff);
+        a += 1.f;
+        theta += PI / 100;
     }
 
     goto cleanup;
@@ -195,9 +277,13 @@ cleanup:
     if (p)
         free(p);
 
-    if (pr)
-        free(pr);
+    if (p1)
+        free(p1);
 
+    if (fb)
+        free(fb);
+
+    clearscreen();
     // show cursor
     printf("\e[?25h");
     return 0;

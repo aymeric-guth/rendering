@@ -76,7 +76,7 @@
 				</MakeCommands>
 			</Target>
 		</Build>
-		<Unit filename="/Users/yul/Desktop/dev/Network/playground/renderer.c">
+		<Unit filename="/Users/yul/Desktop/dev/Network/playground/renderervec.c">
 			<Option target="playground"/>
 		</Unit>
 		<Unit filename="/Users/yul/Desktop/dev/Network/playground/CMakeLists.txt">

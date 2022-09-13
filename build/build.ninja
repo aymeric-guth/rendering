@@ -43,7 +43,7 @@ build cmake_object_order_depends_target_playground: phony || CMakeFiles/playgrou
 
 build CMakeFiles/playground.dir/renderervec.c.o: C_COMPILER__playground_ /Users/yul/Desktop/dev/Network/playground/renderervec.c || cmake_object_order_depends_target_playground
   DEP_FILE = CMakeFiles/playground.dir/renderervec.c.o.d
-  FLAGS = -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.15 -W -Wall -Werror
+  FLAGS = -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.15
   OBJECT_DIR = CMakeFiles/playground.dir
   OBJECT_FILE_DIR = CMakeFiles/playground.dir
   TARGET_COMPILE_PDB = CMakeFiles/playground.dir/

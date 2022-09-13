@@ -129,29 +129,29 @@ playground/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/playground.dir/build.make CMakeFiles/playground.dir/build
 .PHONY : playground/fast
 
-renderer.o: renderer.c.o
-.PHONY : renderer.o
+renderervec.o: renderervec.c.o
+.PHONY : renderervec.o
 
 # target to build an object file
-renderer.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/playground.dir/build.make CMakeFiles/playground.dir/renderer.c.o
-.PHONY : renderer.c.o
+renderervec.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/playground.dir/build.make CMakeFiles/playground.dir/renderervec.c.o
+.PHONY : renderervec.c.o
 
-renderer.i: renderer.c.i
-.PHONY : renderer.i
+renderervec.i: renderervec.c.i
+.PHONY : renderervec.i
 
 # target to preprocess a source file
-renderer.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/playground.dir/build.make CMakeFiles/playground.dir/renderer.c.i
-.PHONY : renderer.c.i
+renderervec.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/playground.dir/build.make CMakeFiles/playground.dir/renderervec.c.i
+.PHONY : renderervec.c.i
 
-renderer.s: renderer.c.s
-.PHONY : renderer.s
+renderervec.s: renderervec.c.s
+.PHONY : renderervec.s
 
 # target to generate assembly for a file
-renderer.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/playground.dir/build.make CMakeFiles/playground.dir/renderer.c.s
-.PHONY : renderer.c.s
+renderervec.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/playground.dir/build.make CMakeFiles/playground.dir/renderervec.c.s
+.PHONY : renderervec.c.s
 
 # Help Target
 help:
@@ -162,9 +162,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... playground"
-	@echo "... renderer.o"
-	@echo "... renderer.i"
-	@echo "... renderer.s"
+	@echo "... renderervec.o"
+	@echo "... renderervec.i"
+	@echo "... renderervec.s"
 .PHONY : help
 
 

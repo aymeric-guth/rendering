@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/Users/yul/Desktop/dev/Network/playground/renderer.c" "CMakeFiles/playground.dir/renderer.c.o" "gcc" "CMakeFiles/playground.dir/renderer.c.o.d"
+  "/Users/yul/Desktop/dev/Network/playground/renderervec.c" "CMakeFiles/playground.dir/renderervec.c.o" "gcc" "CMakeFiles/playground.dir/renderervec.c.o.d"
   )
 
 # Targets to which this target links.

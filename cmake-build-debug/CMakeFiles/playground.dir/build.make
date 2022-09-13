@@ -69,28 +69,28 @@ include CMakeFiles/playground.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/playground.dir/flags.make
 
-CMakeFiles/playground.dir/renderer.c.o: CMakeFiles/playground.dir/flags.make
-CMakeFiles/playground.dir/renderer.c.o: ../renderer.c
-CMakeFiles/playground.dir/renderer.c.o: CMakeFiles/playground.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/yul/Desktop/dev/Network/playground/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/playground.dir/renderer.c.o"
-	/opt/local/libexec/llvm-14/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/playground.dir/renderer.c.o -MF CMakeFiles/playground.dir/renderer.c.o.d -o CMakeFiles/playground.dir/renderer.c.o -c /Users/yul/Desktop/dev/Network/playground/renderer.c
+CMakeFiles/playground.dir/renderervec.c.o: CMakeFiles/playground.dir/flags.make
+CMakeFiles/playground.dir/renderervec.c.o: ../renderervec.c
+CMakeFiles/playground.dir/renderervec.c.o: CMakeFiles/playground.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/yul/Desktop/dev/Network/playground/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/playground.dir/renderervec.c.o"
+	/opt/local/libexec/llvm-14/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/playground.dir/renderervec.c.o -MF CMakeFiles/playground.dir/renderervec.c.o.d -o CMakeFiles/playground.dir/renderervec.c.o -c /Users/yul/Desktop/dev/Network/playground/renderervec.c
 
-CMakeFiles/playground.dir/renderer.c.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/playground.dir/renderer.c.i"
-	/opt/local/libexec/llvm-14/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/yul/Desktop/dev/Network/playground/renderer.c > CMakeFiles/playground.dir/renderer.c.i
+CMakeFiles/playground.dir/renderervec.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/playground.dir/renderervec.c.i"
+	/opt/local/libexec/llvm-14/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/yul/Desktop/dev/Network/playground/renderervec.c > CMakeFiles/playground.dir/renderervec.c.i
 
-CMakeFiles/playground.dir/renderer.c.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/playground.dir/renderer.c.s"
-	/opt/local/libexec/llvm-14/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/yul/Desktop/dev/Network/playground/renderer.c -o CMakeFiles/playground.dir/renderer.c.s
+CMakeFiles/playground.dir/renderervec.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/playground.dir/renderervec.c.s"
+	/opt/local/libexec/llvm-14/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/yul/Desktop/dev/Network/playground/renderervec.c -o CMakeFiles/playground.dir/renderervec.c.s
 
 # Object files for target playground
 playground_OBJECTS = \
-"CMakeFiles/playground.dir/renderer.c.o"
+"CMakeFiles/playground.dir/renderervec.c.o"
 
 # External object files for target playground
 playground_EXTERNAL_OBJECTS =
 
-playground: CMakeFiles/playground.dir/renderer.c.o
+playground: CMakeFiles/playground.dir/renderervec.c.o
 playground: CMakeFiles/playground.dir/build.make
 playground: CMakeFiles/playground.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/Users/yul/Desktop/dev/Network/playground/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking C executable playground"

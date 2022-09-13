@@ -1,1 +1,0 @@
-/opt/local/libexec/llvm-14/bin/clang -g -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.15 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/a.out.dir/renderer.c.o -o a.out 

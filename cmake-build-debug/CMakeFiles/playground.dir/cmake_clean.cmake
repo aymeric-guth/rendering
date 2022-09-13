@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/playground.dir/renderer.c.o"
-  "CMakeFiles/playground.dir/renderer.c.o.d"
+  "CMakeFiles/playground.dir/renderervec.c.o"
+  "CMakeFiles/playground.dir/renderervec.c.o.d"
   "playground"
   "playground.pdb"
 )
