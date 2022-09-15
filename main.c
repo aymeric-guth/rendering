@@ -106,36 +106,6 @@ void render(Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH])
     }
 }
 
-void rot_yaw(Pixel_A *vec3, float theta)
-{
-    float cos_theta = cosf(theta);
-    float sin_theta = sinf(theta);
-    float x = vec3->x;
-    float y = vec3->y;
-    vec3->x = x * cos_theta - (y * sin_theta);
-    vec3->y = x * sin_theta + y * cos_theta;
-}
-
-void rot_pitch(Pixel_A *vec3, float theta)
-{
-    float cos_theta = cosf(theta);
-    float sin_theta = sinf(theta);
-    float x = vec3->x;
-    float z = vec3->z;
-    vec3->x = x * cos_theta + z * sin_theta;
-    vec3->z = -(x * sin_theta) + z * cos_theta;
-}
-
-void rot_roll(Pixel_A *vec3, float theta)
-{
-    float cos_theta = cosf(theta);
-    float sin_theta = sinf(theta);
-    float y = vec3->y;
-    float z = vec3->z;
-    vec3->y = y * cos_theta + -(z * sin_theta);
-    vec3->z = y * sin_theta + z * cos_theta;
-}
-
 void transform(Pixel_A *space3d, Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH], float zoom)
 {
     float zbuffer[SCREEN_HEIGHT][SCREEN_WIDTH];
@@ -278,12 +248,15 @@ int main()
     printf("\033[2J");
     // hide cursor
     printf("\e[?25l");
-    float zoom = 0.f;
     float alpha = 0.f; // yaw
     float beta = 0.f; // pitch
     float gamma = 0.f; // roll
     float ROT_STEP = PI / 75.f;
     float ZOOM_STEP = 1.f;
+    float TRANSLATION_STEP = 1.f;
+    float x_ofst = 0.f;
+    float y_ofst = 0.f;
+    float z_ofst = 0.f;
 
     for (int n = 0; n < CYCLES; n++) {
         memcpy(p1, p, sizeof(Pixel_A)*SPACE);
@@ -293,7 +266,6 @@ int main()
             switch (elmt) {
             // a
             case 97:
-                // alpha -= ROT_STEP;
                 beta -= ROT_STEP;
                 break;
 
@@ -310,7 +282,6 @@ int main()
             // d
             case 100:
                 beta += ROT_STEP;
-                // alpha += ROT_STEP;
                 break;
 
             // A
@@ -319,7 +290,7 @@ int main()
 
             // S
             case 83:
-                zoom -= ZOOM_STEP;
+                z_ofst -= TRANSLATION_STEP;
                 break;
 
             // D
@@ -328,29 +299,52 @@ int main()
 
             // W
             case 87:
-                zoom += ZOOM_STEP;
+                z_ofst += TRANSLATION_STEP;
                 break;
             }
 
-        // f_color = !f_color;
-        // if (f_color) {
-        //     Pixel_A *px = p1;
-        //     for (int i = 0; i < SPACE; i++) {
-        //         px->color = WHITE;
-        //         px++;
-        //     }
-        // }
         {
             Pixel_A *px = p1;
 
             for (int i = 0; i < SPACE; i++) {
-                rot_yaw(px, alpha);
-                rot_pitch(px, beta);
-                rot_roll(px, gamma);
+                // yaw
+                {
+                    float cos_alpha = cosf(alpha);
+                    float sin_alpha = sinf(alpha);
+                    float x = px->x;
+                    float y = px->y;
+                    px->x = x * cos_alpha - (y * sin_alpha);
+                    px->y = x * sin_alpha + y * cos_alpha;
+                }
+                // pitch
+                {
+                    float cos_beta = cosf(beta);
+                    float sin_beta = sinf(beta);
+                    float x = px->x;
+                    float z = px->z;
+                    px->x = x * cos_beta + z * sin_beta;
+                    px->z = -(x * sin_beta) + z * cos_beta;
+                }
+                // roll
+                {
+                    float cos_gamma = cosf(gamma);
+                    float sin_gamma = sinf(gamma);
+                    float y = px->y;
+                    float z = px->z;
+                    px->y = y * cos_gamma + -(z * sin_gamma);
+                    px->z = y * sin_gamma + z * cos_gamma;
+                }
+                // translation
+                {
+                    px->x += x_ofst;
+                    px->y += y_ofst;
+                    px->z += z_ofst;
+                }
                 px++;
             }
         }
-        transform(p1, framebuff, zoom);
+
+        transform(p1, framebuff, 0.f);
         render(framebuff);
         msleep(20);
         // re-init frame-buffer
