@@ -6,6 +6,7 @@
 #define CYCLES 1000
 #define FRAME 24
 #define PI 3.141592653589793f
+#define QUEUE_SIZE 16
 
 typedef enum { NONE, BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, TEMPLATE } Color;
 

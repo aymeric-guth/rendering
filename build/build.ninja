@@ -49,6 +49,14 @@ build CMakeFiles/playground.dir/renderervec.c.o: C_COMPILER__playground_ /Users/
   TARGET_COMPILE_PDB = CMakeFiles/playground.dir/
   TARGET_PDB = playground.pdb
 
+build CMakeFiles/playground.dir/fifo.c.o: C_COMPILER__playground_ /Users/yul/Desktop/dev/Network/playground/fifo.c || cmake_object_order_depends_target_playground
+  DEP_FILE = CMakeFiles/playground.dir/fifo.c.o.d
+  FLAGS = -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.15
+  OBJECT_DIR = CMakeFiles/playground.dir
+  OBJECT_FILE_DIR = CMakeFiles/playground.dir
+  TARGET_COMPILE_PDB = CMakeFiles/playground.dir/
+  TARGET_PDB = playground.pdb
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target playground
@@ -57,9 +65,9 @@ build CMakeFiles/playground.dir/renderervec.c.o: C_COMPILER__playground_ /Users/
 #############################################
 # Link the executable playground
 
-build playground: C_EXECUTABLE_LINKER__playground_ CMakeFiles/playground.dir/renderervec.c.o
+build playground: C_EXECUTABLE_LINKER__playground_ CMakeFiles/playground.dir/renderervec.c.o CMakeFiles/playground.dir/fifo.c.o
   FLAGS = -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.15
-  LINK_LIBRARIES = -lm  -lncurses
+  LINK_LIBRARIES = -lm  -lpthread  -lncurses
   OBJECT_DIR = CMakeFiles/playground.dir
   POST_BUILD = :
   PRE_LINK = :

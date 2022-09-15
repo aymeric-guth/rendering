@@ -11,8 +11,8 @@ typedef struct {
     size_t head;
     size_t tail;
     size_t size;
-    void **data;
+    int *data;
 } Q;
 
-void *Q_get(Q *q);
-int Q_put(Q *q, void *handle);
+int Q_get(Q *, int *);
+int Q_put(Q *, int);

@@ -5,7 +5,9 @@
 #include <sys/signal.h>
 #include <math.h>
 #include <ncurses.h>
+#include "pthread.h"
 
+#include "fifo.h"
 #include "constants.h"
 #include "utilz.h"
 
@@ -195,9 +197,27 @@ void init_framebuff(Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH])
         }
 }
 
+void *kb_input(void *arg)
+{
+    Q *q = (Q *) arg;
+
+    while (1) {
+        int c = getch();
+
+        if (c)
+            Q_put(q, c);
+    }
+
+    return NULL;
+}
+
+
 int main()
 {
     initscr();
+    pthread_t _kb_input;
+    Q q = {0, 0, QUEUE_SIZE, malloc(sizeof(void *) * QUEUE_SIZE)};
+    pthread_create(&_kb_input, NULL, kb_input, &q);
     Pixel space3d[SIZE3D][SIZE3D][SIZE3D];
     Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH];
     Pixel_A *p = (Pixel_A *) malloc(sizeof(Pixel_A) * SIZE3D * SIZE3D * SIZE3D);
@@ -263,8 +283,20 @@ int main()
     float a = 0.f;
 
     for (int n = 0; n < CYCLES; n++) {
+        memcpy(p1, p, sizeof(Pixel_A)*SPACE);
+        int elmt = 0;
+        Q_get(&q, &elmt);
+
+        if (elmt > 0) {
+            Pixel_A *px = p1;
+
+            for (int i = 0; i < SPACE; i++) {
+                px->color = WHITE;
+                px++;
+            }
+        }
+
         {
-            memcpy(p1, p, sizeof(Pixel_A)*SPACE);
             Pixel_A *px = p1;
 
             for (int i = 0; i < SPACE; i++) {
@@ -274,6 +306,7 @@ int main()
                 px++;
             }
         }
+
         transform(p1, framebuff, zoom);
         render(framebuff);
         msleep(20);
