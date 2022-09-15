@@ -29,9 +29,11 @@ void clearscreen(void)
 
 void colorize(Pixel space3d[SIZE3D][SIZE3D][SIZE3D])
 {
+    Pixel *px = NULL;
+
     for (int j = 0; j < SIZE3D; j++) {
         for (int i = 0; i < SIZE3D; i++) {
-            Pixel *px = &(space3d[0][j][i]);
+            px = &(space3d[0][j][i]);
             px->color = RED;
             px = &space3d[SIZE3D - 1][j][i];
             px->color = CYAN;
@@ -40,7 +42,7 @@ void colorize(Pixel space3d[SIZE3D][SIZE3D][SIZE3D])
 
     for (int k = 0; k < SIZE3D; k++) {
         for (int j = 0; j < SIZE3D; j++) {
-            Pixel *px = &space3d[k][j][1];
+            px = &space3d[k][j][0];
             px->color = GREEN;
             px = &space3d[k][j][SIZE3D - 1];
             px->color = BLUE;
@@ -49,7 +51,7 @@ void colorize(Pixel space3d[SIZE3D][SIZE3D][SIZE3D])
 
     for (int k = 0; k < SIZE3D; k++) {
         for (int i = 0; i < SIZE3D; i++) {
-            Pixel *px = &space3d[k][0][i];
+            px = &space3d[k][0][i];
             px->color = WHITE;
             px = &space3d[k][SIZE3D - 1][i];
             px->color = YELLOW;
@@ -107,8 +109,8 @@ void rot_yaw(Pixel_A *vec3, float theta)
     float sin_theta = sinf(theta);
     float x = vec3->x;
     float y = vec3->y;
-    vec3->x = x * cos_theta - (x * sin_theta);
-    vec3->y = y * sin_theta + y * cos_theta;
+    vec3->x = x * cos_theta - (y * sin_theta);
+    vec3->y = x * sin_theta + y * cos_theta;
 }
 
 void rot_pitch(Pixel_A *vec3, float theta)
@@ -117,8 +119,8 @@ void rot_pitch(Pixel_A *vec3, float theta)
     float sin_theta = sinf(theta);
     float x = vec3->x;
     float z = vec3->z;
-    vec3->x = x * cos_theta + x * sin_theta;
-    vec3->z = -(z * sin_theta) + z * cos_theta;
+    vec3->x = x * cos_theta + z * sin_theta;
+    vec3->z = -(x * sin_theta) + z * cos_theta;
 }
 
 void rot_roll(Pixel_A *vec3, float theta)
@@ -127,8 +129,8 @@ void rot_roll(Pixel_A *vec3, float theta)
     float sin_theta = sinf(theta);
     float y = vec3->y;
     float z = vec3->z;
-    vec3->y = y * cos_theta - (y * sin_theta);
-    vec3->z = -(z * sin_theta) + z * cos_theta;
+    vec3->y = y * cos_theta + -(z * sin_theta);
+    vec3->z = y * sin_theta + z * cos_theta;
 }
 
 void transform(Pixel_A *space3d, Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH], float zoom)
@@ -140,17 +142,25 @@ void transform(Pixel_A *space3d, Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH], 
             zbuffer[j][i] = 0.f;
     }
 
-    // camera distance from the screen
-    const float K1 = -1.f;
+    // camera distance from the screen ~focal distance
+    const float K1 = 30.f;
     // screen distance from the scene
-    const float K2 = -1.f + zoom;
+    const float K2 = 30.f;
 
     for (int i = 0; i < SIZE3D * SIZE3D * SIZE3D; i++) {
-        float z = space3d->z + K1 + K2;
-        float ooz = 1.f / sqrtf(z * z);
-        float x1 = space3d->x * ooz;
-        float y1 = space3d->y * ooz;
-        int xp = (int)((float)SCREEN_WIDTH / 2 + x1);
+        // float z = space3d->z + K1 + K2;
+        // float ooz = 1.f / z;
+        // float x1 = space3d->x * ooz;
+        // float y1 = space3d->y * ooz;
+        // int xp = (int)((float)SCREEN_WIDTH / 2 - x1);
+        // int yp = (int)((float)SCREEN_HEIGHT / 2 - y1);
+        float x = space3d->x;
+        float y = space3d->y;
+        float z = space3d->z;
+        float ooz = 1.f / (z + K1 + K2);
+        float x1 = (x * K1) * ooz;
+        float y1 = (y * K1) * ooz;
+        int xp = (int)((float)SCREEN_WIDTH / 2 - x1);
         int yp = (int)((float)SCREEN_HEIGHT / 2 - y1);
 
         // OOB check
@@ -234,7 +244,7 @@ int main()
                 for (int i = 0; i < SIZE3D; i++) {
                     px->x = (float)i - (float)SIZE3D / 2;
                     px->y = (float)j - (float)SIZE3D / 2;
-                    px->z = -1.f * (float)k;
+                    px->z = (float)k;
                     px->color = space3d[k][j][i].color;
                     px->shader = space3d[k][j][i].shader;
                     px++;
@@ -246,7 +256,7 @@ int main()
     printf("\033[2J");
     // hide cursor
     printf("\e[?25l");
-    float zoom = -3.f;
+    float zoom = 200.f;
     float theta = 0.f;
     float a = 0.f;
 
@@ -256,15 +266,15 @@ int main()
             Pixel_A *px = p1;
 
             for (int i = 0; i < SPACE; i++) {
-                // rot_pitch(px, theta);
-                // rot_yaw(px, theta);
-                // rot_roll(px, theta);
+                rot_yaw(px, theta);
+                rot_pitch(px, theta);
+                rot_roll(px, theta);
                 px++;
             }
         }
         transform(p1, framebuff, zoom);
         render(framebuff);
-        msleep(100);
+        msleep(20);
         // re-init frame-buffer
         init_framebuff(framebuff);
         a += 1.f;

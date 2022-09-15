@@ -1,4 +1,4 @@
-#define SIZE3D 100
+#define SIZE3D 33
 #define SPACE SIZE3D * SIZE3D * SIZE3D
 #define SCREEN_WIDTH 124 / 2
 #define SCREEN_HEIGHT 33
