@@ -4,6 +4,7 @@
 #include <string.h>
 #include <sys/signal.h>
 #include <math.h>
+#include <ncurses.h>
 
 #include "constants.h"
 #include "utilz.h"
@@ -196,6 +197,7 @@ void init_framebuff(Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH])
 
 int main()
 {
+    initscr();
     Pixel space3d[SIZE3D][SIZE3D][SIZE3D];
     Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH];
     Pixel_A *p = (Pixel_A *) malloc(sizeof(Pixel_A) * SIZE3D * SIZE3D * SIZE3D);
@@ -296,5 +298,6 @@ cleanup:
     clearscreen();
     // show cursor
     printf("\e[?25h");
+    endwin();
     return 0;
 }

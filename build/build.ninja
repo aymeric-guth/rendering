@@ -59,6 +59,7 @@ build CMakeFiles/playground.dir/renderervec.c.o: C_COMPILER__playground_ /Users/
 
 build playground: C_EXECUTABLE_LINKER__playground_ CMakeFiles/playground.dir/renderervec.c.o
   FLAGS = -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.15
+  LINK_LIBRARIES = -lm  -lncurses
   OBJECT_DIR = CMakeFiles/playground.dir
   POST_BUILD = :
   PRE_LINK = :
