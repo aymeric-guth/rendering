@@ -4,6 +4,10 @@ enable_language(C)
 
 # add_compile_options(-W -Wall -Werror)
 add_executable(${PROJECT_NAME} main.c fifo.c)
+add_executable(kbfind kbfind.c fifo.c)
 target_link_libraries(${PROJECT_NAME} PUBLIC m)
 target_link_libraries(${PROJECT_NAME} PUBLIC pthread)
-target_link_libraries(${PROJECT_NAME} PUBLIC ncurses)
+
+target_link_libraries(kbfind PUBLIC m)
+target_link_libraries(kbfind PUBLIC pthread)
+target_link_libraries(kbfind PUBLIC ncurses)

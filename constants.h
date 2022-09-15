@@ -49,3 +49,12 @@ const char *color_map[] = {
     [WHITE] = "\x1b[37;1m",
     [TEMPLATE] = "\x1b[38;5;$%dm"
 };
+
+typedef struct {
+    float alpha; // yaw
+    float beta; // pitch
+    float gamma; // roll
+    float x_ofst;
+    float y_ofst;
+    float z_ofst;
+} Transform_Vars;

@@ -7,8 +7,8 @@
 #include <pthread.h>
 #include <termios.h>
 
-#include "fifo.h"
 #include "constants.h"
+#include "fifo.h"
 #include "utilz.h"
 
 void clearscreen(void)
@@ -106,7 +106,37 @@ void render(Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH])
     }
 }
 
-void transform(Pixel_A *space3d, Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH])
+void rot_yaw(Pixel_A *vec3, float theta)
+{
+    float cos_theta = cosf(theta);
+    float sin_theta = sinf(theta);
+    float x = vec3->x;
+    float y = vec3->y;
+    vec3->x = x * cos_theta - (y * sin_theta);
+    vec3->y = x * sin_theta + y * cos_theta;
+}
+
+void rot_pitch(Pixel_A *vec3, float theta)
+{
+    float cos_theta = cosf(theta);
+    float sin_theta = sinf(theta);
+    float x = vec3->x;
+    float z = vec3->z;
+    vec3->x = x * cos_theta + z * sin_theta;
+    vec3->z = -(x * sin_theta) + z * cos_theta;
+}
+
+void rot_roll(Pixel_A *vec3, float theta)
+{
+    float cos_theta = cosf(theta);
+    float sin_theta = sinf(theta);
+    float y = vec3->y;
+    float z = vec3->z;
+    vec3->y = y * cos_theta + -(z * sin_theta);
+    vec3->z = y * sin_theta + z * cos_theta;
+}
+
+void transform(Pixel_A *space3d, Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH], float zoom)
 {
     float zbuffer[SCREEN_HEIGHT][SCREEN_WIDTH];
 
@@ -118,7 +148,7 @@ void transform(Pixel_A *space3d, Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH])
     // camera distance from the screen ~focal distance
     const float K1 = 30.f;
     // screen distance from the scene
-    const float K2 = 30.f;
+    const float K2 = 30.f + zoom;
 
     for (int i = 0; i < SIZE3D * SIZE3D * SIZE3D; i++) {
         // float z = space3d->z + K1 + K2;
@@ -181,9 +211,6 @@ void *kb_input(void *arg)
 
 void process_input(Transform_Vars *tf, int elmt)
 {
-    float ROT_STEP = PI / 75.f;
-    float TRANSLATION_STEP = 1.f;
-
     switch (elmt) {
     // a
     case 97:
@@ -211,7 +238,7 @@ void process_input(Transform_Vars *tf, int elmt)
 
     // S
     case 83:
-        tf->z_ofst -= TRANSLATION_STEP;
+        tf->z_ofst -= ZOOM_STEP;
         break;
 
     // D
@@ -220,43 +247,20 @@ void process_input(Transform_Vars *tf, int elmt)
 
     // W
     case 87:
-        tf->z_ofst += TRANSLATION_STEP;
-        break;
-
-    // h
-    case 104:
-        tf->x_ofst -= TRANSLATION_STEP;
-        break;
-
-    // j
-    case 106:
-        tf->y_ofst -= TRANSLATION_STEP;
-        break;
-
-    // k
-    case 107:
-        tf->y_ofst += TRANSLATION_STEP;
-        break;
-
-    // l
-    case 108:
-        tf->x_ofst += TRANSLATION_STEP;
+        tf->z_ofst += ZOOM_STEP;
         break;
     }
 }
 
 int main()
 {
-    // tty raw mode, non buffered io
+    pthread_t _kb_input;
+    Q q = {0, 0, QUEUE_SIZE, malloc(sizeof(void *) * QUEUE_SIZE)};
     struct termios mode;
     tcgetattr(0, &mode);
     mode.c_lflag &= ~(ECHO | ICANON);
     tcsetattr(0, TCSANOW, &mode);
-    // io thread init
-    pthread_t _kb_input;
-    Q q = {0, 0, QUEUE_SIZE, malloc(sizeof(void *) * QUEUE_SIZE)};
     pthread_create(&_kb_input, NULL, kb_input, &q);
-    // world init
     Pixel space3d[SIZE3D][SIZE3D][SIZE3D];
     Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH];
     Pixel_A *p = (Pixel_A *) malloc(sizeof(Pixel_A) * SIZE3D * SIZE3D * SIZE3D);
@@ -317,6 +321,8 @@ int main()
     printf("\033[2J");
     // hide cursor
     printf("\e[?25l");
+    float ROT_STEP = PI / 75.f;
+    float ZOOM_STEP = 1.f;
     Transform_Vars tf = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f};
 
     for (int n = 0; n < CYCLES; n++) {
@@ -326,45 +332,16 @@ int main()
         if (!Q_get(&q, &elmt))
             process_input(&tf, elmt);
 
-        Pixel_A *px = p1;
+        {
+            Pixel_A *px = p1;
 
-        for (int i = 0; i < SPACE; i++) {
-            // yaw
-            {
-                float cos_alpha = cosf(tf.alpha);
-                float sin_alpha = sinf(tf.alpha);
-                float x = px->x;
-                float y = px->y;
-                px->x = x * cos_alpha - (y * sin_alpha);
-                px->y = x * sin_alpha + y * cos_alpha;
+            for (int i = 0; i < SPACE; i++) {
+                rot_yaw(px, tf.alpha);
+                rot_pitch(px, tf.beta);
+                rot_roll(px, tf.gamma);
+                px++;
             }
-            // pitch
-            {
-                float cos_beta = cosf(tf.beta);
-                float sin_beta = sinf(tf.beta);
-                float x = px->x;
-                float z = px->z;
-                px->x = x * cos_beta + z * sin_beta;
-                px->z = -(x * sin_beta) + z * cos_beta;
-            }
-            // roll
-            {
-                float cos_gamma = cosf(tf.gamma);
-                float sin_gamma = sinf(tf.gamma);
-                float y = px->y;
-                float z = px->z;
-                px->y = y * cos_gamma + -(z * sin_gamma);
-                px->z = y * sin_gamma + z * cos_gamma;
-            }
-            // translation
-            {
-                px->x += tf.x_ofst;
-                px->y += tf.y_ofst;
-                px->z += tf.z_ofst;
-            }
-            px++;
         }
-
         transform(p1, framebuff);
         render(framebuff);
         msleep(20);
