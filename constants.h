@@ -49,3 +49,6 @@ const char *color_map[] = {
     [WHITE] = "\x1b[37;1m",
     [TEMPLATE] = "\x1b[38;5;$%dm"
 };
+
+
+typedef enum { KEY_A, KEY_W, KEY_S, KEY_D } Input;
