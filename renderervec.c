@@ -148,7 +148,7 @@ void transform(Pixel_A *space3d, Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH], 
     // camera distance from the screen ~focal distance
     const float K1 = 30.f;
     // screen distance from the scene
-    const float K2 = 30.f;
+    const float K2 = 30.f + zoom;
 
     for (int i = 0; i < SIZE3D * SIZE3D * SIZE3D; i++) {
         // float z = space3d->z + K1 + K2;
@@ -278,13 +278,12 @@ int main()
     printf("\033[2J");
     // hide cursor
     printf("\e[?25l");
-    float zoom = 200.f;
-    float theta = 0.f;
-    float a = 0.f;
-    int f_color = 0;
-    float alpha = 0.f;
-    float beta = 0.f;
-    float gamma = 0.f;
+    float zoom = 0.f;
+    float alpha = 0.f; // yaw
+    float beta = 0.f; // pitch
+    float gamma = 0.f; // roll
+    float ROT_STEP = PI / 75.f;
+    float ZOOM_STEP = 1.f;
 
     for (int n = 0; n < CYCLES; n++) {
         memcpy(p1, p, sizeof(Pixel_A)*SPACE);
@@ -292,39 +291,70 @@ int main()
 
         if (!Q_get(&q, &elmt))
             switch (elmt) {
-KEY_Z:
+            // a
+            case 97:
+                // alpha -= ROT_STEP;
+                beta -= ROT_STEP;
+                break;
+
+            // w
+            case 119:
+                gamma += ROT_STEP;
+                break;
+
+            // s
+            case 115:
+                gamma -= ROT_STEP;
+                break;
+
+            // d
+            case 100:
+                beta += ROT_STEP;
+                // alpha += ROT_STEP;
+                break;
+
+            // A
+            case 65:
+                break;
+
+            // S
+            case 83:
+                zoom -= ZOOM_STEP;
+                break;
+
+            // D
+            case 68:
+                break;
+
+            // W
+            case 87:
+                zoom += ZOOM_STEP;
                 break;
             }
 
-        f_color = !f_color;
-
-        if (f_color) {
-            Pixel_A *px = p1;
-
-            for (int i = 0; i < SPACE; i++) {
-                px->color = WHITE;
-                px++;
-            }
-        }
-
+        // f_color = !f_color;
+        // if (f_color) {
+        //     Pixel_A *px = p1;
+        //     for (int i = 0; i < SPACE; i++) {
+        //         px->color = WHITE;
+        //         px++;
+        //     }
+        // }
         {
             Pixel_A *px = p1;
 
             for (int i = 0; i < SPACE; i++) {
-                rot_yaw(px, theta);
-                rot_pitch(px, theta);
-                rot_roll(px, theta);
+                rot_yaw(px, alpha);
+                rot_pitch(px, beta);
+                rot_roll(px, gamma);
                 px++;
             }
         }
-
         transform(p1, framebuff, zoom);
         render(framebuff);
         msleep(20);
         // re-init frame-buffer
         init_framebuff(framebuff);
-        a += 1.f;
-        theta += PI / 100;
     }
 
     goto cleanup;

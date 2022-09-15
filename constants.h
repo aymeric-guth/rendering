@@ -3,7 +3,7 @@
 #define SCREEN_WIDTH 124 / 2
 #define SCREEN_HEIGHT 33
 #define DEBUG 0
-#define CYCLES 1000
+#define CYCLES 2000
 #define FRAME 24
 #define PI 3.141592653589793f
 #define QUEUE_SIZE 16
@@ -49,6 +49,3 @@ const char *color_map[] = {
     [WHITE] = "\x1b[37;1m",
     [TEMPLATE] = "\x1b[38;5;$%dm"
 };
-
-
-typedef enum { KEY_A, KEY_W, KEY_S, KEY_D } Input;
