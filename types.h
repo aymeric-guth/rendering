@@ -47,6 +47,7 @@ typedef struct {
     Pixel_A *p1;
     Pixel **framebuff;
     float **zbuff;
+    Tri *scene;
 } Game_State;
 
 typedef struct {

@@ -16,6 +16,8 @@
 #include "matrix.h"
 #include "input.h"
 
+#include "scene_data.h"
+
 int TERMX = 0;
 int TERMY = 0;
 
@@ -190,10 +192,10 @@ int entrypoint(Game_State *state, Render_Params *params)
     printf("\033[2J");
     // hide cursor
     printf("\e[?25l");
-    struct timespec start, end;
+    // struct timespec start, end;
 
     for (int n = 0; n < CYCLES; n++) {
-        clock_gettime(CLOCK_MONOTONIC_RAW, &start);
+        // clock_gettime(CLOCK_MONOTONIC_RAW, &start);
         memcpy(p1, p, sizeof(Pixel_A)*SPACE);
         int elmt = 0;
         params->tf->alpha += PI / 100;
@@ -287,6 +289,96 @@ int entrypoint(Game_State *state, Render_Params *params)
     return 0;
 }
 
+int entrypoint_tri(Game_State *state, Render_Params *params)
+{
+    Pixel **framebuff = state->framebuff;
+    float **zbuff = state->zbuff;
+    Q *q = state->q;
+    // clear screen
+    printf("\033[2J");
+    // hide cursor
+    printf("\e[?25l");
+
+    for (int n = 0; n < CYCLES; n++) {
+        int elmt = 0;
+
+        while (Q_get(q, &elmt) > 0)
+            process_input(params->tf, elmt);
+
+        // re-init zbuffer
+        for (int j = 0; j < params->term->y; j++) {
+            for (int i = 0; i < params->term->x; i++)
+                zbuff[j][i] = 0.f;
+        }
+
+        // re-init frame-buffer
+        {
+            for (int j = 0; j < params->term->y; j++)
+                for (int i = 0; i < params->term->x; i++) {
+                    framebuff[j][i].shader = 0;
+                    framebuff[j][i].color = COLOR_NONE;
+                }
+        }
+        get_term_size(params->term);
+        mat4x4 proj_mat;
+        get_proj_mat(params, proj_mat);
+        mat3x3 yaw_mat;
+        get_yaw_mat(params->tf->alpha, yaw_mat);
+        mat3x3 pitch_mat;
+        get_pitch_mat(params->tf->beta, pitch_mat);
+        mat3x3 roll_mat;
+        get_roll_mat(params->tf->gamma, roll_mat);
+        mat4x3 tr_mat;
+        get_tr_mat(params->tf->v, tr_mat);
+        Vec3 v0 = { .x = 0.f, .y = 0.f, .z = params->translation_ofst};
+
+        // transformation pipeline
+        for (int i = 0; i < SPACE; i++) {
+            Vec3 v;
+            // TODO
+            Px_to_Vec3(px, &v);
+            mat3x3_Vec3_mul(yaw_mat, &v, &v);
+            mat3x3_Vec3_mul(pitch_mat, &v, &v);
+            mat3x3_Vec3_mul(roll_mat, &v, &v);
+            mat4x3_Vec3_mul(tr_mat, &v, &v);
+            Vec3_add(&v, &v0, &v);
+            // rectilinear projection
+            mat4x4_Vec3_mul(proj_mat, &v, &v);
+            {
+                v.x += 1.f;
+                v.y += 1.f;
+                v.z += 1.f;
+                v.x *= 0.5f * params->term->x;
+                v.y *= 0.5f * params->term->y;
+                v.z *= 0.5f;
+            }
+            {
+                if (v.x > (params->term->x - 1.f) || v.x < 0.f || v.y > (params->term->y - 1.f) || v.y < 0.f) {
+                    px++;
+                    continue;
+                }
+
+                // TODO
+                int x = (int)v.x;
+                int y = (int)v.y;
+
+                if (v.z < zbuff[y][x]) {
+                    zbuff[y][x] = v.z;
+                    // TODO
+                    framebuff[y][x].shader = px->shader;
+                    framebuff[y][x].color = px->color;
+                }
+            }
+            px++;
+        }
+
+        // drawing routine
+        draw(framebuff);
+    }
+
+    return 0;
+}
+
 int main()
 {
     Vec2 term;
@@ -312,19 +404,23 @@ int main()
     Q q = {0, 0, QUEUE_SIZE, qp};
     pthread_create(&_kb_input, NULL, kb_input, &q);
     // world init
+    Tri *ptr = malloc(sizeof(Tri) * SCENE_SIZE);
+
+    if (!ptr)
+        goto cleanup;
+
+    memset(ptr, 0, sizeof(Tri) * SCENE_SIZE);
+    memcpy(ptr, scene, sizeof(Tri) * SCENE_SIZE);
+    // TODO
     Pixel_A *p = (Pixel_A *) malloc(sizeof(Pixel_A) * SIZE3D * SIZE3D * SIZE3D);
 
     if (!p)
         goto cleanup;
 
+    // TODO
     Pixel_A *p1 = (Pixel_A *) malloc(sizeof(Pixel_A) * SIZE3D * SIZE3D * SIZE3D);
 
     if (!p1)
-        goto cleanup;
-
-    Pixel *fb = (Pixel *) malloc(sizeof(Pixel) * termx * termy);
-
-    if (!fb)
         goto cleanup;
 
     Pixel **framebuff = (Pixel **) malloc(sizeof(Pixel *) * termy);
@@ -341,7 +437,7 @@ int main()
 
     memset(p, 0, sizeof(Pixel_A) * SIZE3D * SIZE3D * SIZE3D);
     memset(p1, 0, sizeof(Pixel_A) * SIZE3D * SIZE3D * SIZE3D);
-    Game_State state = { .q = &q, .p = p, .p1 = p1, .framebuff = framebuff, .zbuff = zbuff };
+    Game_State state = { .q = &q, .p = p, .p1 = p1, .framebuff = framebuff, .zbuff = zbuff, .scene = ptr };
     Vec3 ofst = {.x = 0.f, .y = 0.f, .z = 0.f};
     Transform_Vars tf = {
         .alpha = 0.f,
@@ -369,6 +465,9 @@ cleanup:
 
     if (p1)
         free(p1);
+
+    if (ptr)
+        free(ptr);
 
     if (framebuff) {
         while (1) {
