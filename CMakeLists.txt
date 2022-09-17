@@ -3,7 +3,7 @@ project(playground)
 enable_language(C)
 
 # add_compile_options(-W -Wall -Werror)
-add_executable(${PROJECT_NAME} main.c fifo.c matrix.c)
+add_executable(${PROJECT_NAME} main.c fifo.c matrix.c input.c)
 add_executable(kbfind kbfind.c fifo.c)
 target_link_libraries(${PROJECT_NAME} PUBLIC m)
 target_link_libraries(${PROJECT_NAME} PUBLIC pthread)

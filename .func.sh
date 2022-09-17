@@ -15,5 +15,6 @@ build() {
 run() {
   [ ! "$(basename "$PWD")" = "$PROJECT_NAME" ] && return 1
   build
-  ./build/"$PROJECT_NAME" && echo "$?"
+  kitty --config=./kitty.conf --start-as=maximized sh -c "./build/$PROJECT_NAME"
+  # ./build/"$PROJECT_NAME" && echo "$?"
 }

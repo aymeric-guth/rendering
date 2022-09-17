@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,6 +15,10 @@
 #include "constants.h"
 #include "utilz.h"
 #include "matrix.h"
+#include "input.h"
+
+int TERMX = 0;
+int TERMY = 0;
 
 void clearscreen(void)
 {
@@ -25,7 +30,7 @@ void clearscreen(void)
     for (int j = 0; j < TERMY; j++) {
         for (int i = 0; i < TERMX * 2; i++) {
             // printf("\x1b[H");
-            // move cursor to (x, y)
+            // move cursor to (y, x)
             printf("\033[%d;%dH", j, i);
             printf(" ");
         }
@@ -34,7 +39,7 @@ void clearscreen(void)
     // printf("\033[2J");
 }
 
-void render(Pixel **framebuff)
+void draw(Pixel **framebuff)
 {
     Pixel *px;
 
@@ -55,134 +60,53 @@ void render(Pixel **framebuff)
     }
 }
 
-void projection(Pixel_A *i, Pixel_A *o, Transform_Vars *tf)
+void get_proj_mat(Render_Params *params, mat4x4 mat)
 {
-    tf->theta = PI * 0.5f;
-    float a = (float)TERMY / (float)TERMX;
-    float fov = 1 / tanf(tf->theta * 0.5f);
-    // zfar = max rendering distance
-    float viewing_distance = SPACE;
-    // znear = distance from camera to screen
-    float focal_distance = 100.f;
+    float a = params->termy / params->termx;
+    float fov = 1 / tanf(params->tf->theta * 0.5f);
+    float viewing_distance = params->viewing_distance;
+    float focal_distance = params->focal_distance;
     float q = viewing_distance / (viewing_distance - focal_distance);
-    float projection_mat[4][4];
-    projection_mat[0][0] = a * fov;
-    projection_mat[1][0] = 0.f;
-    projection_mat[2][0] = 0.f;
-    projection_mat[3][0] = 0.f;
-    projection_mat[0][1] = 0.f;
-    projection_mat[1][1] = fov;
-    projection_mat[2][1] = 0.f;
-    projection_mat[3][1] = 0.f;
-    projection_mat[0][2] = 0.f;
-    projection_mat[1][2] = 0.f;
-    projection_mat[2][2] = q;
-    projection_mat[3][2] = -focal_distance * q;
-    projection_mat[0][3] = 0.f;
-    projection_mat[1][3] = 0.f;
-    projection_mat[2][3] = 1.f;
-    projection_mat[3][3] = 0.f;
-    {
-        o->x = i->x * projection_mat[0][0] + i->y * projection_mat[1][0] + i->z * projection_mat[2][0] + projection_mat[3][0];
-        o->y = i->x * projection_mat[0][1] + i->y * projection_mat[1][1] + i->z * projection_mat[2][1] + projection_mat[3][1];
-        o->z = i->x * projection_mat[0][2] + i->y * projection_mat[1][2] + i->z * projection_mat[2][2] + projection_mat[3][2];
-        float w = i->x * projection_mat[0][3] + i->y * projection_mat[1][3] + i->z * projection_mat[2][3] + projection_mat[3][3];
-
-        if (w != 0.f) {
-            float oow = 1.f / w;
-            o->x = o->x * oow;
-            o->y = o->y * oow;
-            o->z = o->z * oow;
-        }
-    }
+    mat[0][0] = a * fov;
+    mat[1][0] = 0.f;
+    mat[2][0] = 0.f;
+    mat[3][0] = 0.f;
+    mat[0][1] = 0.f;
+    mat[1][1] = fov;
+    mat[2][1] = 0.f;
+    mat[3][1] = 0.f;
+    mat[0][2] = 0.f;
+    mat[1][2] = 0.f;
+    mat[2][2] = q;
+    mat[3][2] = -focal_distance * q;
+    mat[0][3] = 0.f;
+    mat[1][3] = 0.f;
+    mat[2][3] = 1.f;
+    mat[3][3] = 0.f;
 }
 
-void *kb_input(void *arg)
+void Px_to_Vec3(Pixel_A *px, Vec3 *v)
 {
-    Q *q = (Q *) arg;
-
-    while (1) {
-        int c = getchar();
-        Q_put(q, c);
-    }
-
-    return NULL;
+    v->x = px->x;
+    v->y = px->y;
+    v->z = px->z;
 }
 
-void process_input(Transform_Vars *tf, int elmt)
+void Vec3_to_Px(Pixel_A *px, Vec3 *v)
 {
-    float ROT_STEP = PI / 75.f;
-    float TRANSLATION_STEP = 1.f;
-
-    switch (elmt) {
-    // a
-    case 97:
-        tf->beta -= ROT_STEP;
-        break;
-
-    // w
-    case 119:
-        tf->gamma += ROT_STEP;
-        break;
-
-    // s
-    case 115:
-        tf->gamma -= ROT_STEP;
-        break;
-
-    // d
-    case 100:
-        tf->beta += ROT_STEP;
-        break;
-
-    // A
-    case 65:
-        break;
-
-    // S
-    case 83:
-        tf->z_ofst -= TRANSLATION_STEP;
-        break;
-
-    // D
-    case 68:
-        break;
-
-    // W
-    case 87:
-        tf->z_ofst += TRANSLATION_STEP;
-        break;
-
-    // h
-    case 104:
-        tf->x_ofst -= TRANSLATION_STEP;
-        break;
-
-    // j
-    case 106:
-        tf->y_ofst -= TRANSLATION_STEP;
-        break;
-
-    // k
-    case 107:
-        tf->y_ofst += TRANSLATION_STEP;
-        break;
-
-    // l
-    case 108:
-        tf->x_ofst += TRANSLATION_STEP;
-        break;
-    }
+    px->x = v->x;
+    px->y = v->y;
+    px->z = v->z;
 }
 
-void diry_allocator(Pixel_A *p)
+void dirty_allocator(Pixel_A *p)
 {
     Pixel space3d[SIZE3D][SIZE3D][SIZE3D];
 
     for (int k = 0; k < SIZE3D; k++) {
         for (int j = 0; j < SIZE3D; j++) {
             for (int i = 0; i < SIZE3D; i++) {
-                Pixel px = {.color = COLOR_NONE, .shader = 1};
+                Pixel px = {.color = COLOR_NONE, .shader = 12};
                 space3d[k][j][i] = px;
             }
         }
@@ -237,7 +161,7 @@ void diry_allocator(Pixel_A *p)
     }
 }
 
-int entrypoint(Game_State *state)
+int entrypoint(Game_State *state, Render_Params *params)
 {
     Q *q = state->q;
     Pixel_A *p = state->p;
@@ -245,20 +169,19 @@ int entrypoint(Game_State *state)
     Pixel **framebuff = state->framebuff;
     float **zbuff = state->zbuff;
     // TODO
-    diry_allocator(p);
+    dirty_allocator(p);
     // clear screen
     printf("\033[2J");
     // hide cursor
     printf("\e[?25l");
-    Transform_Vars tf = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f};
-    float translation_ofst = 100.0f;
+    Transform_Vars *tf = params->tf;
 
     for (int n = 0; n < CYCLES; n++) {
         memcpy(p1, p, sizeof(Pixel_A)*SPACE);
         int elmt = 0;
 
         while (Q_get(q, &elmt) > 0)
-            process_input(&tf, elmt);
+            process_input(tf, elmt);
 
         {
             for (int j = 0; j < TERMY; j++) {
@@ -267,83 +190,84 @@ int entrypoint(Game_State *state)
             }
 
             Pixel_A *px = p1;
+            mat4x4 proj_mat;
+            get_proj_mat(params, proj_mat);
+            mat3x3 yaw_mat;
+            get_yaw_mat(params->tf->alpha, yaw_mat);
+            mat3x3 pitch_mat;
+            get_pitch_mat(params->tf->beta, pitch_mat);
+            mat3x3 roll_mat;
+            get_roll_mat(params->tf->gamma, roll_mat);
 
             // transformation pipeline
             for (int i = 0; i < SPACE; i++) {
-                // yaw
                 {
-                    float cos_alpha = cosf(tf.alpha);
-                    float sin_alpha = sinf(tf.alpha);
-                    // float yaw_mat[3][3] = {0.f};
-                    // yaw_mat[0][0] = cos_alpha;
-                    // yaw_mat[1][0] = sin_alpha;
-                    // yaw_mat[2][0] = 0.f;
-                    // yaw_mat[0][1] = -sin_alpha;
-                    // yaw_mat[1][1] = cos_alpha;
-                    // yaw_mat[2][1] = 0.f;
-                    // yaw_mat[0][2] = 0.f;
-                    // yaw_mat[1][2] = 0.f;
-                    // yaw_mat[2][2] = 1.f;
-                    // mat3x3(px, px, yaw_mat);
-                    float x = px->x;
-                    float y = px->y;
-                    px->x = x * cos_alpha - (y * sin_alpha);
-                    px->y = x * sin_alpha + y * cos_alpha;
-                }
-                // pitch
-                {
-                    float cos_beta = cosf(tf.beta);
-                    float sin_beta = sinf(tf.beta);
-                    float x = px->x;
-                    float z = px->z;
-                    px->x = x * cos_beta + z * sin_beta;
-                    px->z = -(x * sin_beta) + z * cos_beta;
-                }
-                // roll
-                {
-                    float cos_gamma = cosf(tf.gamma);
-                    float sin_gamma = sinf(tf.gamma);
-                    float y = px->y;
-                    float z = px->z;
-                    px->y = y * cos_gamma + -(z * sin_gamma);
-                    px->z = y * sin_gamma + z * cos_gamma;
-                }
-                // translation
-                {
-                    px->x += tf.x_ofst;
-                    px->y += tf.y_ofst;
-                    px->z += tf.z_ofst + translation_ofst;
-                }
-                // rectilinear projection
-                Pixel_A vec;
-                Pixel_A *o = &vec;
-                projection(px, o, &tf);
-                {
-                    o->x += 1.f;
-                    o->y += 1.f;
-                    o->x *= 0.5f * (float)TERMX;
-                    o->y *= 0.5f * (float)TERMY;
+                    // yaw
+                    Vec3 vi;
+                    Vec3 vo;
+                    Px_to_Vec3(px, &vi);
+                    mat3x3_Vec3_mul(yaw_mat, &vi, &vo);
+                    Vec3_to_Px(px, &vo);
                 }
                 {
-                    int x = (int)o->x;
-                    int y = (int)o->y;
-
-                    if (x > (TERMX - 1) || x < 0 || y > (TERMY - 1) || y < 0) {
-                        px++;
-                        continue;
+                    // pitch
+                    Vec3 vi;
+                    Vec3 vo;
+                    Px_to_Vec3(px, &vi);
+                    mat3x3_Vec3_mul(pitch_mat, &vi, &vo);
+                    Vec3_to_Px(px, &vo);
+                }
+                {
+                    // roll
+                    Vec3 vi;
+                    Vec3 vo;
+                    Px_to_Vec3(px, &vi);
+                    mat3x3_Vec3_mul(roll_mat, &vi, &vo);
+                    Vec3_to_Px(px, &vo);
+                }
+                {
+                    // translation
+                    Vec3 vi;
+                    Vec3 vo;
+                    Px_to_Vec3(px, &vi);
+                    Vec3_add(&vi, tf->v, &vo);
+                    Vec3 v0 = { .x = 0.f, .y = 0.f, .z = params->translation_ofst};
+                    Vec3_add(&vo, &v0, &vo);
+                    Vec3_to_Px(px, &vo);
+                }
+                {
+                    // rectilinear projection
+                    Vec3 vi;
+                    Vec3 vo;
+                    Px_to_Vec3(px, &vi);
+                    mat4x4_Vec3_mul(proj_mat, &vi, &vo);
+                    {
+                        vo.x += 1.f;
+                        vo.y += 1.f;
+                        vo.x *= 0.5f * params->termx;
+                        vo.y *= 0.5f * params->termy;
                     }
+                    {
+                        int x = (int)vo.x;
+                        int y = (int)vo.y;
 
-                    if (o->z < zbuff[y][x]) {
-                        zbuff[y][x] = o->z;
-                        framebuff[y][x].shader = px->shader;
-                        framebuff[y][x].color = px->color;
+                        if (x > (params->termx - 1) || x < 0 || y > (params->termy - 1) || y < 0) {
+                            px++;
+                            continue;
+                        }
+
+                        if (vo.z < zbuff[y][x]) {
+                            zbuff[y][x] = vo.z;
+                            framebuff[y][x].shader = px->shader;
+                            framebuff[y][x].color = px->color;
+                        }
                     }
                 }
                 px++;
             }
 
-            render(framebuff);
-            msleep(20);
+            draw(framebuff);
+            // msleep(20);
             // re-init frame-buffer
             {
                 for (int j = 0; j < TERMY; j++)
@@ -416,7 +340,23 @@ int main()
     memset(p, 0, sizeof(Pixel_A) * SIZE3D * SIZE3D * SIZE3D);
     memset(p1, 0, sizeof(Pixel_A) * SIZE3D * SIZE3D * SIZE3D);
     Game_State state = { .q = &q, .p = p, .p1 = p1, .framebuff = framebuff, .zbuff = zbuff };
-    entrypoint(&state);
+    Vec3 ofst = {.x = 0.f, .y = 0.f, .z = 0.f};
+    Transform_Vars tf = {
+        .alpha = 0.f,
+        .beta = 0.f,
+        .gamma = 0.f,
+        .theta = PI * 0.5f,
+        .v = &ofst
+    };
+    Render_Params params = {
+        .tf = &tf,
+        .termx = (float)TERMX,
+        .termy = (float)TERMY,
+        .focal_distance = 100.f,
+        .translation_ofst = 100.f,
+        .viewing_distance = 1000.f
+    };
+    entrypoint(&state, &params);
     goto cleanup;
 cleanup:
 

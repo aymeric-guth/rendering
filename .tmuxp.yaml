@@ -14,12 +14,6 @@ windows:
       - shell_command:
         - editor .
 
-  - window_name: cmake
-    start_directory: .
-    layout: even-horizontal
-    panes:
-      - editor CMakeLists.txt
-
   - window_name: shell
     start_directory: .
     layout: even-horizontal

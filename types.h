@@ -1,12 +1,13 @@
 #include "fifo.h"
 #include "matrix.h"
+#include <assert.h>
 
 #ifndef TYPES_H
 #define TYPES_H
 
 typedef enum { COLOR_NONE, COLOR_BLACK, COLOR_RED, COLOR_GREEN, COLOR_YELLOW, COLOR_BLUE, COLOR_MAGENTA, COLOR_CYAN, COLOR_WHITE, COLOR_TEMPLATE } Color;
 
-const char *color_map[] = {
+static const char *color_map[] = {
     [COLOR_NONE] = "",
     [COLOR_BLACK] = "\x1b[30;1m",
     [COLOR_RED] = "\x1b[31;1m",
@@ -43,9 +44,7 @@ typedef struct {
     float beta; // pitch
     float gamma; // roll
     float theta; // FOV
-    float x_ofst;
-    float y_ofst;
-    float z_ofst;
+    Vec3 *v;
 } Transform_Vars;
 
 typedef struct {
@@ -55,5 +54,16 @@ typedef struct {
     Pixel **framebuff;
     float **zbuff;
 } Game_State;
+
+typedef struct {
+    Transform_Vars *tf;
+    float termx;
+    float termy;
+    // znear = distance from camera to screen
+    float focal_distance;
+    // zfar = max rendering distance
+    float viewing_distance;
+    float translation_ofst;
+} Render_Params;
 
 #endif
