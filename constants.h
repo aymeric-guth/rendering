@@ -8,6 +8,7 @@
 #define DEBUG 0
 #define CYCLES 1000
 #define FRAME 24
+#define FRAME_US 16.666667f
 #define PI 3.141592653589793f
 #define QUEUE_SIZE 16
 

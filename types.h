@@ -33,12 +33,6 @@ typedef struct {
     Color color;
 } Pixel_A;
 
-// typedef struct {
-//     Vec3 v;
-//     int shader;
-//     Color color;
-// } Pixel_A;
-
 typedef struct {
     float alpha; // yaw
     float beta; // pitch
@@ -57,8 +51,7 @@ typedef struct {
 
 typedef struct {
     Transform_Vars *tf;
-    float termx;
-    float termy;
+    Vec2 *term;
     // znear = distance from camera to screen
     float focal_distance;
     // zfar = max rendering distance

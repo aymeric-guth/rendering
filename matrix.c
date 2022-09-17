@@ -1,5 +1,5 @@
+#include <math.h>
 #include "matrix.h"
-#include "math.h"
 
 void Vec3_add(Vec3 *i1, Vec3 *i2, Vec3 *o)
 {
@@ -34,6 +34,16 @@ void mat3x3_Vec3_mul(mat3x3 mat, Vec3 *i, Vec3 *o)
     o->x = x * mat[0][0] + y * mat[1][0] + z * mat[2][0];
     o->y = x * mat[0][1] + y * mat[1][1] + z * mat[2][1];
     o->z = x * mat[0][2] + y * mat[1][2] + z * mat[2][2];
+}
+
+void mat4x3_Vec3_mul(mat4x3 mat, Vec3 *i, Vec3 *o)
+{
+    float x = i->x;
+    float y = i->y;
+    float z = i->z;
+    o->x = x * mat[0][0] + y * mat[1][0] + z * mat[2][0] + 1.f * mat[3][0];
+    o->y = x * mat[0][1] + y * mat[1][1] + z * mat[2][1] + 1.f * mat[3][1];
+    o->z = x * mat[0][2] + y * mat[1][2] + z * mat[2][2] + 1.f * mat[3][2];
 }
 
 void get_yaw_mat(float alpha, mat3x3 mat)
@@ -79,4 +89,20 @@ void get_roll_mat(float gamma, mat3x3 mat)
     mat[0][2] = 0.f;
     mat[1][2] = -sin_gamma;
     mat[2][2] = cos_gamma;
+}
+
+void get_tr_mat(Vec3 *vec, mat4x3 mat)
+{
+    mat[0][0] = 1.f;
+    mat[1][0] = 0.f;
+    mat[2][0] = 0.f;
+    mat[3][0] = vec->x;
+    mat[0][1] = 0.f;
+    mat[1][1] = 1.f;
+    mat[2][1] = 0.f;
+    mat[3][1] = vec->y;
+    mat[0][2] = 0.f;
+    mat[1][2] = 0.f;
+    mat[2][2] = 1.f;
+    mat[3][2] = vec->z;
 }

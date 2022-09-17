@@ -5,7 +5,6 @@
 #include <string.h>
 #include <sys/signal.h>
 #include <sys/ioctl.h>
-#include <math.h>
 #include <pthread.h>
 #include <termios.h>
 #include <unistd.h>
@@ -20,6 +19,18 @@
 int TERMX = 0;
 int TERMY = 0;
 
+void get_term_size(Vec2 *v)
+{
+    // runtime terminal size
+    struct winsize w;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+    v->x = (float)w.ws_col / 2.f;
+    v->y = (float)w.ws_row;
+    TERMX = (int) v->x;
+    TERMY = (int) v->y;
+}
+
+// TODO
 void clearscreen(void)
 {
     //printf("\033[XA"); // Move up X lines;
@@ -39,6 +50,7 @@ void clearscreen(void)
     // printf("\033[2J");
 }
 
+// TODO
 void draw(Pixel **framebuff)
 {
     Pixel *px;
@@ -62,7 +74,7 @@ void draw(Pixel **framebuff)
 
 void get_proj_mat(Render_Params *params, mat4x4 mat)
 {
-    float a = params->termy / params->termx;
+    float a = (float)params->term->y / (float)params->term->x;
     float fov = 1 / tanf(params->tf->theta * 0.5f);
     float viewing_distance = params->viewing_distance;
     float focal_distance = params->focal_distance;
@@ -85,6 +97,7 @@ void get_proj_mat(Render_Params *params, mat4x4 mat)
     mat[3][3] = 0.f;
 }
 
+// TODO
 void Px_to_Vec3(Pixel_A *px, Vec3 *v)
 {
     v->x = px->x;
@@ -92,6 +105,7 @@ void Px_to_Vec3(Pixel_A *px, Vec3 *v)
     v->z = px->z;
 }
 
+// TODO
 void Vec3_to_Px(Pixel_A *px, Vec3 *v)
 {
     px->x = v->x;
@@ -163,10 +177,12 @@ void dirty_allocator(Pixel_A *p)
 
 int entrypoint(Game_State *state, Render_Params *params)
 {
-    Q *q = state->q;
+    // TODO
     Pixel_A *p = state->p;
     Pixel_A *p1 = state->p1;
     Pixel **framebuff = state->framebuff;
+    //
+    Q *q = state->q;
     float **zbuff = state->zbuff;
     // TODO
     dirty_allocator(p);
@@ -174,109 +190,98 @@ int entrypoint(Game_State *state, Render_Params *params)
     printf("\033[2J");
     // hide cursor
     printf("\e[?25l");
-    Transform_Vars *tf = params->tf;
+    struct timespec start, end;
 
     for (int n = 0; n < CYCLES; n++) {
+        clock_gettime(CLOCK_MONOTONIC_RAW, &start);
         memcpy(p1, p, sizeof(Pixel_A)*SPACE);
         int elmt = 0;
+        params->tf->alpha += PI / 100;
+        params->tf->beta += PI / 200;
+        params->tf->gamma += PI / 300;
 
         while (Q_get(q, &elmt) > 0)
-            process_input(tf, elmt);
+            process_input(params->tf, elmt);
 
-        {
-            for (int j = 0; j < TERMY; j++) {
-                for (int i = 0; i < TERMX; i++)
-                    zbuff[j][i] = 0.f;
-            }
-
-            Pixel_A *px = p1;
-            mat4x4 proj_mat;
-            get_proj_mat(params, proj_mat);
-            mat3x3 yaw_mat;
-            get_yaw_mat(params->tf->alpha, yaw_mat);
-            mat3x3 pitch_mat;
-            get_pitch_mat(params->tf->beta, pitch_mat);
-            mat3x3 roll_mat;
-            get_roll_mat(params->tf->gamma, roll_mat);
-
-            // transformation pipeline
-            for (int i = 0; i < SPACE; i++) {
-                {
-                    // yaw
-                    Vec3 vi;
-                    Vec3 vo;
-                    Px_to_Vec3(px, &vi);
-                    mat3x3_Vec3_mul(yaw_mat, &vi, &vo);
-                    Vec3_to_Px(px, &vo);
-                }
-                {
-                    // pitch
-                    Vec3 vi;
-                    Vec3 vo;
-                    Px_to_Vec3(px, &vi);
-                    mat3x3_Vec3_mul(pitch_mat, &vi, &vo);
-                    Vec3_to_Px(px, &vo);
-                }
-                {
-                    // roll
-                    Vec3 vi;
-                    Vec3 vo;
-                    Px_to_Vec3(px, &vi);
-                    mat3x3_Vec3_mul(roll_mat, &vi, &vo);
-                    Vec3_to_Px(px, &vo);
-                }
-                {
-                    // translation
-                    Vec3 vi;
-                    Vec3 vo;
-                    Px_to_Vec3(px, &vi);
-                    Vec3_add(&vi, tf->v, &vo);
-                    Vec3 v0 = { .x = 0.f, .y = 0.f, .z = params->translation_ofst};
-                    Vec3_add(&vo, &v0, &vo);
-                    Vec3_to_Px(px, &vo);
-                }
-                {
-                    // rectilinear projection
-                    Vec3 vi;
-                    Vec3 vo;
-                    Px_to_Vec3(px, &vi);
-                    mat4x4_Vec3_mul(proj_mat, &vi, &vo);
-                    {
-                        vo.x += 1.f;
-                        vo.y += 1.f;
-                        vo.x *= 0.5f * params->termx;
-                        vo.y *= 0.5f * params->termy;
-                    }
-                    {
-                        int x = (int)vo.x;
-                        int y = (int)vo.y;
-
-                        if (x > (params->termx - 1) || x < 0 || y > (params->termy - 1) || y < 0) {
-                            px++;
-                            continue;
-                        }
-
-                        if (vo.z < zbuff[y][x]) {
-                            zbuff[y][x] = vo.z;
-                            framebuff[y][x].shader = px->shader;
-                            framebuff[y][x].color = px->color;
-                        }
-                    }
-                }
-                px++;
-            }
-
-            draw(framebuff);
-            // msleep(20);
-            // re-init frame-buffer
-            {
-                for (int j = 0; j < TERMY; j++)
-                    for (int i = 0; i < TERMX; i++) {
-                        framebuff[j][i].shader = 0;
-                        framebuff[j][i].color = COLOR_NONE;
-                    }
-            }
+        // re-init zbuffer
+        for (int j = 0; j < params->term->y; j++) {
+            for (int i = 0; i < params->term->x; i++)
+                zbuff[j][i] = 0.f;
         }
+
+        // re-init frame-buffer
+        {
+            for (int j = 0; j < params->term->y; j++)
+                for (int i = 0; i < params->term->x; i++) {
+                    framebuff[j][i].shader = 0;
+                    framebuff[j][i].color = COLOR_NONE;
+                }
+        }
+        // TODO
+        Pixel_A *px = p1;
+        get_term_size(params->term);
+        mat4x4 proj_mat;
+        get_proj_mat(params, proj_mat);
+        mat3x3 yaw_mat;
+        get_yaw_mat(params->tf->alpha, yaw_mat);
+        mat3x3 pitch_mat;
+        get_pitch_mat(params->tf->beta, pitch_mat);
+        mat3x3 roll_mat;
+        get_roll_mat(params->tf->gamma, roll_mat);
+        mat4x3 tr_mat;
+        get_tr_mat(params->tf->v, tr_mat);
+        Vec3 v0 = { .x = 0.f, .y = 0.f, .z = params->translation_ofst};
+
+        // transformation pipeline
+        for (int i = 0; i < SPACE; i++) {
+            Vec3 v;
+            // TODO
+            Px_to_Vec3(px, &v);
+            mat3x3_Vec3_mul(yaw_mat, &v, &v);
+            mat3x3_Vec3_mul(pitch_mat, &v, &v);
+            mat3x3_Vec3_mul(roll_mat, &v, &v);
+            mat4x3_Vec3_mul(tr_mat, &v, &v);
+            Vec3_add(&v, &v0, &v);
+            // rectilinear projection
+            mat4x4_Vec3_mul(proj_mat, &v, &v);
+            {
+                v.x += 1.f;
+                v.y += 1.f;
+                v.z += 1.f;
+                v.x *= 0.5f * params->term->x;
+                v.y *= 0.5f * params->term->y;
+                v.z *= 0.5f;
+            }
+            {
+                if (v.x > (params->term->x - 1.f) || v.x < 0.f || v.y > (params->term->y - 1.f) || v.y < 0.f) {
+                    px++;
+                    continue;
+                }
+
+                // TODO
+                int x = (int)v.x;
+                int y = (int)v.y;
+
+                if (v.z < zbuff[y][x]) {
+                    zbuff[y][x] = v.z;
+                    // TODO
+                    framebuff[y][x].shader = px->shader;
+                    framebuff[y][x].color = px->color;
+                }
+            }
+            px++;
+        }
+
+        // drawing routine
+        draw(framebuff);
+        // compensate if rendering speed < FRAME_US ~60Hz
+        // ne fonctionne pas correctement
+        // clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+        // uint64_t delta_us = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
+        // if ((float)delta_us > FRAME_US) {
+        //     float val = (float)delta_us - FRAME_US;
+        //     msleep(val / 1000);
+        // }
     }
 
     return 0;
@@ -284,17 +289,14 @@ int entrypoint(Game_State *state, Render_Params *params)
 
 int main()
 {
-    // runtime terminal size
-    struct winsize w;
-    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-    TERMX = w.ws_col / 2;
-    TERMY = w.ws_row;
+    Vec2 term;
+    get_term_size(&term);
+    int termx = TERMX;
+    int termy = TERMY;
 
-    if (TERMX <= 0 || TERMY <= 0)
+    if (term.x <= 0.f || term.y <= 0)
         goto cleanup;
 
-    // TERMX = SCREEN_WIDTH;
-    // TERMY = SCREEN_HEIGHT;
     // tty raw mode, non buffered io
     struct termios mode;
     tcgetattr(0, &mode);
@@ -320,20 +322,20 @@ int main()
     if (!p1)
         goto cleanup;
 
-    Pixel *fb = (Pixel *) malloc(sizeof(Pixel) * TERMX * TERMY);
+    Pixel *fb = (Pixel *) malloc(sizeof(Pixel) * termx * termy);
 
     if (!fb)
         goto cleanup;
 
-    Pixel **framebuff = (Pixel **) malloc(sizeof(Pixel *) * TERMY);
-    float **zbuff = (float **)malloc(sizeof(float *) * TERMY);
+    Pixel **framebuff = (Pixel **) malloc(sizeof(Pixel *) * termy);
+    float **zbuff = (float **)malloc(sizeof(float *) * termy);
 
-    for (int i = 0; i < TERMY; i++) {
-        Pixel *pfb = (Pixel *) malloc(sizeof(Pixel) * TERMX);
-        memset(pfb, 0, sizeof(Pixel) * TERMX);
+    for (int i = 0; i < termy; i++) {
+        Pixel *pfb = (Pixel *) malloc(sizeof(Pixel) * termx);
+        memset(pfb, 0, sizeof(Pixel) * termx);
         framebuff[i] = pfb;
-        float *pzb = (float *) malloc(sizeof(float) * TERMX);
-        memset(pzb, 0, sizeof(float) * TERMX);
+        float *pzb = (float *) malloc(sizeof(float) * termx);
+        memset(pzb, 0, sizeof(float) * termx);
         zbuff[i] = pzb;
     }
 
@@ -350,11 +352,10 @@ int main()
     };
     Render_Params params = {
         .tf = &tf,
-        .termx = (float)TERMX,
-        .termy = (float)TERMY,
-        .focal_distance = 100.f,
-        .translation_ofst = 100.f,
-        .viewing_distance = 1000.f
+        .term = &term,
+        .focal_distance = 1000.f,
+        .translation_ofst = 120.f,
+        .viewing_distance = 10000.f
     };
     entrypoint(&state, &params);
     goto cleanup;
