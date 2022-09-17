@@ -3,10 +3,11 @@
 // This is because the head and tail "pointers" are only written by the producer and consumer respectively.
 // Demonstrated with void pointers and no memory management.
 // Note that empty is head==tail, thus only QUEUE_SIZE-1 entries may be used.
-
 #include <stdlib.h>
 #include <assert.h>
 
+#ifndef FIFO_H
+#define FIFO_H
 
 typedef struct {
     size_t head;
@@ -17,3 +18,5 @@ typedef struct {
 
 int Q_get(Q *, int *);
 int Q_put(Q *, int);
+
+#endif /* FIFO_H */

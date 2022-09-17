@@ -3,7 +3,13 @@
 build() {
   [ ! "$(basename "$PWD")" = "$PROJECT_NAME" ] && return 1
   rm -rf ./build && mkdir ./build || return 1
-  cmake -S . -B ./build -G Ninja && ninja -C ./build
+  cmake \
+    CMAKE_EXPORT_COMPILE_COMMANDS=ON \
+    -S . \
+    -B ./build \
+    -G Ninja \
+    && ninja \
+    -C ./build
 }
 
 run() {

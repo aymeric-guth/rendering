@@ -4,13 +4,14 @@
 #include <string.h>
 #include <sys/signal.h>
 #include <math.h>
-#include <ncurses.h>
+//#include <ncurses.h>
 #include <pthread.h>
+#include <termios.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
 #include "fifo.h"
 #include "constants.h"
-#include <stdio.h>
-#include <termios.h>
 
 void *kb_input(void *arg)
 {
@@ -34,6 +35,11 @@ int main()
     mode.c_lflag &= ~(ECHO | ICANON);
     tcsetattr(0, TCSANOW, &mode);
     pthread_create(&_kb_input, NULL, kb_input, &q);
+    struct winsize w;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+    printf("lines %d\n", w.ws_row);
+    printf("columns %d\n", w.ws_col);
+    return 0;  // make sure your main returns int
 
     while (1) {
         int elmt = 0;
