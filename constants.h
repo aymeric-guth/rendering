@@ -7,10 +7,10 @@
 
     #define SIZE3D 100
     #define SPACE SIZE3D * SIZE3D * SIZE3D
-    #define SCREEN_WIDTH 124 / 2
-    #define SCREEN_HEIGHT 33
+    // #define SCREEN_WIDTH 124 / 2
+    // #define SCREEN_HEIGHT 33
     #define DEBUG 0
-    #define CYCLES 100
+    #define CYCLES 1000
     #define FRAME 24
     #define PI 3.141592653589793f
     #define QUEUE_SIZE 16

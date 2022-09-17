@@ -34,13 +34,13 @@ void clearscreen(void)
     // printf("\033[2J");
 }
 
-void render(Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH])
+void render(Pixel **framebuff)
 {
-    Pixel *px = NULL;
+    Pixel *px;
 
     for (int j = 0; j < TERMY; j++) {
         for (int i = 0; i < TERMX; i++) {
-            px = framebuff[j][i];
+            px = &framebuff[j][i];
             char c = " .,-~:;=!*#$@"[px->shader];
             const char *color = color_map[px->color];
             // enable color
@@ -48,8 +48,8 @@ void render(Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH])
             // move cursor to (x, y)
             printf("\033[%d;%dH", j, i * 2);
             printf("%c", c);
-            // printf("\033[%d;%dH", (int)px->y, (int)px->x * 2 + 1);
-            // disable color
+            printf("\033[%d;%dH", j, i * 2 + 1);
+            printf("%c", c);
             printf("\x1b[0m");
         }
     }
@@ -61,9 +61,9 @@ void projection(Pixel_A *i, Pixel_A *o, Transform_Vars *tf)
     float a = (float)TERMY / (float)TERMX;
     float fov = 1 / tanf(tf->theta * 0.5f);
     // zfar = max rendering distance
-    float viewing_distance = 200.f;
+    float viewing_distance = SPACE;
     // znear = distance from camera to screen
-    float focal_distance = 10.f;
+    float focal_distance = 100.f;
     float q = viewing_distance / (viewing_distance - focal_distance);
     float projection_mat[4][4];
     projection_mat[0][0] = a * fov;
@@ -242,20 +242,10 @@ int entrypoint(Game_State *state)
     Q *q = state->q;
     Pixel_A *p = state->p;
     Pixel_A *p1 = state->p1;
-    Pixel *fb = state->fb;
-    Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH];
+    Pixel **framebuff = state->framebuff;
+    float **zbuff = state->zbuff;
     // TODO
     diry_allocator(p);
-    float zbuffer[SCREEN_HEIGHT][SCREEN_WIDTH];
-    {
-        Pixel *fbp = fb;
-
-        for (int j = 0; j < TERMY; j++)
-            for (int i = 0; i < TERMX; i++) {
-                framebuff[j][i] = fbp;
-                fbp++;
-            }
-    }
     // clear screen
     printf("\033[2J");
     // hide cursor
@@ -273,7 +263,7 @@ int entrypoint(Game_State *state)
         {
             for (int j = 0; j < TERMY; j++) {
                 for (int i = 0; i < TERMX; i++)
-                    zbuffer[j][i] = 0.f;
+                    zbuff[j][i] = 0.f;
             }
 
             Pixel_A *px = p1;
@@ -343,10 +333,10 @@ int entrypoint(Game_State *state)
                         continue;
                     }
 
-                    if (o->z > zbuffer[y][x]) {
-                        zbuffer[y][x] = o->z;
-                        framebuff[y][x]->shader = px->shader;
-                        framebuff[y][x]->color = px->color;
+                    if (o->z < zbuff[y][x]) {
+                        zbuff[y][x] = o->z;
+                        framebuff[y][x].shader = px->shader;
+                        framebuff[y][x].color = px->color;
                     }
                 }
                 px++;
@@ -358,8 +348,8 @@ int entrypoint(Game_State *state)
             {
                 for (int j = 0; j < TERMY; j++)
                     for (int i = 0; i < TERMX; i++) {
-                        framebuff[j][i]->shader = 0;
-                        framebuff[j][i]->color = COLOR_NONE;
+                        framebuff[j][i].shader = 0;
+                        framebuff[j][i].color = COLOR_NONE;
                     }
             }
         }
@@ -371,14 +361,16 @@ int entrypoint(Game_State *state)
 int main()
 {
     // runtime terminal size
-    // struct winsize w;
-    // ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-    // TERMX = w.ws_row / 2;
-    // TERMY = w.ws_col;
-    // if (TERMX <= 0 || TERMY <= 0)
-    //     goto cleanup;
-    TERMX = SCREEN_WIDTH;
-    TERMY = SCREEN_HEIGHT;
+    struct winsize w;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+    TERMX = w.ws_col / 2;
+    TERMY = w.ws_row;
+
+    if (TERMX <= 0 || TERMY <= 0)
+        goto cleanup;
+
+    // TERMX = SCREEN_WIDTH;
+    // TERMY = SCREEN_HEIGHT;
     // tty raw mode, non buffered io
     struct termios mode;
     tcgetattr(0, &mode);
@@ -410,17 +402,20 @@ int main()
         goto cleanup;
 
     Pixel **framebuff = (Pixel **) malloc(sizeof(Pixel *) * TERMY);
+    float **zbuff = (float **)malloc(sizeof(float *) * TERMY);
 
     for (int i = 0; i < TERMY; i++) {
         Pixel *pfb = (Pixel *) malloc(sizeof(Pixel) * TERMX);
         memset(pfb, 0, sizeof(Pixel) * TERMX);
         framebuff[i] = pfb;
+        float *pzb = (float *) malloc(sizeof(float) * TERMX);
+        memset(pzb, 0, sizeof(float) * TERMX);
+        zbuff[i] = pzb;
     }
 
     memset(p, 0, sizeof(Pixel_A) * SIZE3D * SIZE3D * SIZE3D);
     memset(p1, 0, sizeof(Pixel_A) * SIZE3D * SIZE3D * SIZE3D);
-    memset(fb, 0, sizeof(Pixel) * TERMX * TERMY);
-    Game_State state = { &q, p, p1, fb};
+    Game_State state = { .q = &q, .p = p, .p1 = p1, .framebuff = framebuff, .zbuff = zbuff };
     entrypoint(&state);
     goto cleanup;
 cleanup:
@@ -434,14 +429,21 @@ cleanup:
     if (p1)
         free(p1);
 
-    if (fb)
-        free(fb);
-
     if (framebuff) {
         while (1) {
             if (*framebuff) {
                 free(*framebuff);
                 framebuff++;
+            } else
+                break;
+        }
+    }
+
+    if (zbuff) {
+        while (1) {
+            if (*zbuff) {
+                free(*zbuff);
+                zbuff++;
             } else
                 break;
         }

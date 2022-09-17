@@ -52,8 +52,8 @@ typedef struct {
     Q *q;
     Pixel_A *p;
     Pixel_A *p1;
-    Pixel *fb;
     Pixel **framebuff;
+    float **zbuff;
 } Game_State;
 
 #endif
