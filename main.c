@@ -34,38 +34,6 @@ void clearscreen(void)
     // printf("\033[2J");
 }
 
-void colorize(Pixel space3d[SIZE3D][SIZE3D][SIZE3D])
-{
-    Pixel *px = NULL;
-
-    for (int j = 0; j < SIZE3D; j++) {
-        for (int i = 0; i < SIZE3D; i++) {
-            px = &(space3d[0][j][i]);
-            px->color = COLOR_RED;
-            px = &space3d[SIZE3D - 1][j][i];
-            px->color = COLOR_CYAN;
-        }
-    }
-
-    for (int k = 0; k < SIZE3D; k++) {
-        for (int j = 0; j < SIZE3D; j++) {
-            px = &space3d[k][j][0];
-            px->color = COLOR_GREEN;
-            px = &space3d[k][j][SIZE3D - 1];
-            px->color = COLOR_BLUE;
-        }
-    }
-
-    for (int k = 0; k < SIZE3D; k++) {
-        for (int i = 0; i < SIZE3D; i++) {
-            px = &space3d[k][0][i];
-            px->color = COLOR_WHITE;
-            px = &space3d[k][SIZE3D - 1][i];
-            px->color = COLOR_YELLOW;
-        }
-    }
-}
-
 void render(Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH])
 {
     Pixel *px = NULL;
@@ -207,24 +175,9 @@ void process_input(Transform_Vars *tf, int elmt)
     }
 }
 
-int entrypoint(Game_State *state)
+void diry_allocator(Pixel_A *p)
 {
-    Q *q = state->q;
-    Pixel_A *p = state->p;
-    Pixel_A *p1 = state->p1;
-    Pixel *fb = state->fb;
     Pixel space3d[SIZE3D][SIZE3D][SIZE3D];
-    Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH];
-    float zbuffer[SCREEN_HEIGHT][SCREEN_WIDTH];
-    {
-        Pixel *fbp = fb;
-
-        for (int j = 0; j < TERMY; j++)
-            for (int i = 0; i < TERMX; i++) {
-                framebuff[j][i] = fbp;
-                fbp++;
-            }
-    }
 
     for (int k = 0; k < SIZE3D; k++) {
         for (int j = 0; j < SIZE3D; j++) {
@@ -235,22 +188,73 @@ int entrypoint(Game_State *state)
         }
     }
 
-    colorize(space3d);
     {
-        Pixel_A *px = p;
+        Pixel *px = NULL;
+
+        for (int j = 0; j < SIZE3D; j++) {
+            for (int i = 0; i < SIZE3D; i++) {
+                px = &(space3d[0][j][i]);
+                px->color = COLOR_RED;
+                px = &space3d[SIZE3D - 1][j][i];
+                px->color = COLOR_CYAN;
+            }
+        }
 
         for (int k = 0; k < SIZE3D; k++) {
             for (int j = 0; j < SIZE3D; j++) {
+                px = &space3d[k][j][0];
+                px->color = COLOR_GREEN;
+                px = &space3d[k][j][SIZE3D - 1];
+                px->color = COLOR_BLUE;
+            }
+        }
+
+        for (int k = 0; k < SIZE3D; k++) {
+            for (int i = 0; i < SIZE3D; i++) {
+                px = &space3d[k][0][i];
+                px->color = COLOR_WHITE;
+                px = &space3d[k][SIZE3D - 1][i];
+                px->color = COLOR_YELLOW;
+            }
+        }
+    }
+
+    // conversion space3d static array -> heap allocated array of vector
+    // TODO
+    {
+        for (int k = 0; k < SIZE3D; k++) {
+            for (int j = 0; j < SIZE3D; j++) {
                 for (int i = 0; i < SIZE3D; i++) {
-                    px->x = (float)i - (float)SIZE3D / 2;
-                    px->y = (float)j - (float)SIZE3D / 2;
-                    px->z = (float)k - (float)SIZE3D / 2;
-                    px->color = space3d[k][j][i].color;
-                    px->shader = space3d[k][j][i].shader;
-                    px++;
+                    p->x = (float)i - (float)SIZE3D / 2;
+                    p->y = (float)j - (float)SIZE3D / 2;
+                    p->z = (float)k - (float)SIZE3D / 2;
+                    p->color = space3d[k][j][i].color;
+                    p->shader = space3d[k][j][i].shader;
+                    p++;
                 }
             }
         }
+    }
+}
+
+int entrypoint(Game_State *state)
+{
+    Q *q = state->q;
+    Pixel_A *p = state->p;
+    Pixel_A *p1 = state->p1;
+    Pixel *fb = state->fb;
+    Pixel *framebuff[SCREEN_HEIGHT][SCREEN_WIDTH];
+    // TODO
+    diry_allocator(p);
+    float zbuffer[SCREEN_HEIGHT][SCREEN_WIDTH];
+    {
+        Pixel *fbp = fb;
+
+        for (int j = 0; j < TERMY; j++)
+            for (int i = 0; i < TERMX; i++) {
+                framebuff[j][i] = fbp;
+                fbp++;
+            }
     }
     // clear screen
     printf("\033[2J");
@@ -263,7 +267,7 @@ int entrypoint(Game_State *state)
         memcpy(p1, p, sizeof(Pixel_A)*SPACE);
         int elmt = 0;
 
-        if (!Q_get(q, &elmt))
+        while (Q_get(q, &elmt) > 0)
             process_input(&tf, elmt);
 
         {
@@ -348,7 +352,6 @@ int entrypoint(Game_State *state)
                 px++;
             }
 
-            // transform(p1, framebuff);
             render(framebuff);
             msleep(20);
             // re-init frame-buffer
@@ -406,6 +409,14 @@ int main()
     if (!fb)
         goto cleanup;
 
+    Pixel **framebuff = (Pixel **) malloc(sizeof(Pixel *) * TERMY);
+
+    for (int i = 0; i < TERMY; i++) {
+        Pixel *pfb = (Pixel *) malloc(sizeof(Pixel) * TERMX);
+        memset(pfb, 0, sizeof(Pixel) * TERMX);
+        framebuff[i] = pfb;
+    }
+
     memset(p, 0, sizeof(Pixel_A) * SIZE3D * SIZE3D * SIZE3D);
     memset(p1, 0, sizeof(Pixel_A) * SIZE3D * SIZE3D * SIZE3D);
     memset(fb, 0, sizeof(Pixel) * TERMX * TERMY);
@@ -425,6 +436,16 @@ cleanup:
 
     if (fb)
         free(fb);
+
+    if (framebuff) {
+        while (1) {
+            if (*framebuff) {
+                free(*framebuff);
+                framebuff++;
+            } else
+                break;
+        }
+    }
 
     clearscreen();
     // show cursor

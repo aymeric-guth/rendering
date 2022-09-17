@@ -13,7 +13,7 @@ int Q_get(Q *q, int *retval)
     *retval = q->data[q->tail];
     q->data[q->tail] = 0;
     q->tail = (q->tail + 1) % q->size;
-    return 0;
+    return 1;
 }
 
 int Q_put(Q *q, int handle)

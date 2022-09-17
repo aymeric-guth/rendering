@@ -44,7 +44,7 @@ int main()
     while (1) {
         int elmt = 0;
 
-        if (!Q_get(&q, &elmt))
+        if (Q_get(&q, &elmt))
             printf("Got elmt=%d\n", elmt);
     }
 

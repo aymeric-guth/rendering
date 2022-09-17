@@ -53,6 +53,7 @@ typedef struct {
     Pixel_A *p;
     Pixel_A *p1;
     Pixel *fb;
+    Pixel **framebuff;
 } Game_State;
 
 #endif

@@ -4,7 +4,7 @@ build() {
   [ ! "$(basename "$PWD")" = "$PROJECT_NAME" ] && return 1
   rm -rf ./build && mkdir ./build || return 1
   cmake \
-    CMAKE_EXPORT_COMPILE_COMMANDS=ON \
+    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
     -S . \
     -B ./build \
     -G Ninja \
