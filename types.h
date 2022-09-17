@@ -26,28 +26,18 @@ typedef struct {
 } Pixel;
 
 typedef struct {
-    float x;
-    float y;
-    float z;
-    int shader;
-    Color color;
-} Pixel_A;
-
-typedef struct {
     float alpha; // yaw
     float beta; // pitch
     float gamma; // roll
-    float theta; // FOV
     Vec3 *v;
 } Transform_Vars;
 
 typedef struct {
     Q *q;
-    Pixel_A *p;
-    Pixel_A *p1;
     Pixel **framebuff;
     float **zbuff;
-    Tri *scene;
+    Tri *mesh;
+    Pixel **px;
 } Game_State;
 
 typedef struct {
@@ -58,6 +48,7 @@ typedef struct {
     // zfar = max rendering distance
     float viewing_distance;
     float translation_ofst;
+    float theta; // FOV
 } Render_Params;
 
 #endif

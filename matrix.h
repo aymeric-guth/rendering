@@ -1,6 +1,7 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
+#include <stddef.h>
 typedef struct {
     float x;
     float y;
@@ -22,6 +23,11 @@ typedef struct {
 typedef struct {
     Vec3 v[3];
 } Tri;
+
+typedef struct {
+    Tri *t;
+    size_t s;
+} Mesh;
 
 typedef float mat4x4[4][4];
 typedef float mat4x3[4][3];

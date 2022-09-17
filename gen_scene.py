@@ -32,10 +32,11 @@ scene = json.loads(raw)
 
 indent = "    "
 f = open(p / "scene_data.h", "w")
-f.write('#include "matrix.h"\n\n')
+f.write('#include "matrix.h"\n')
+f.write('#include "types.h"\n\n')
 f.write("#ifndef SCENE_DATA_H\n#define SCENE_DATA_H\n")
-f.write(f"#define SCENE_SIZE {len(scene)}\n")
-f.write("static Tri scene[] = {\n")
+f.write(f"#define SCENE_SIZE {len(scene)}\n\n")
+f.write("static Tri _scene[] = {\n")
 for i1, tri in enumerate(scene):
     f.write(indent + "{\n")
     f.write(indent * 2 + ".v = {\n")
@@ -43,6 +44,18 @@ for i1, tri in enumerate(scene):
         f.write(indent * 3 + str(Vec3(v, i2)) + "\n")
     f.write(indent * 2 + "},\n")
     f.write(indent + "},\n")
-f.write("};\n")
+f.write("};\n\n")
+
+f.write("static Pixel _colors[SCENE_SIZE][3] = {\n")
+for i1, tri in enumerate(scene):
+    f.write(indent + "{\n")
+    for i2, v in enumerate(tri):
+        f.write(indent * 2 + "{\n")
+        f.write(indent * 3 + ".color = " + v.get("color") + "RED" + ",\n")
+        f.write(indent * 3 + ".shader = 12\n")
+        f.write(indent * 2 + "},\n")
+    f.write(indent + "},\n")
+f.write("};\n\n")
 f.write("#endif\n")
+
 f.close()

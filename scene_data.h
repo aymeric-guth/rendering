@@ -1,9 +1,11 @@
 #include "matrix.h"
+#include "types.h"
 
 #ifndef SCENE_DATA_H
 #define SCENE_DATA_H
 #define SCENE_SIZE 12
-static Tri scene[] = {
+
+static Tri _scene[] = {
     {
         .v = {
             { .x = 0.0f, .y = 0.0f, .z = 0.0f },
@@ -89,4 +91,176 @@ static Tri scene[] = {
         },
     },
 };
+
+static Pixel _colors[SCENE_SIZE][3] = {
+    {
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+    },
+    {
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+    },
+    {
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+    },
+    {
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+    },
+    {
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+    },
+    {
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+    },
+    {
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+    },
+    {
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+    },
+    {
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+    },
+    {
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+    },
+    {
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+    },
+    {
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+        {
+            .color = COLOR_RED,
+            .shader = 1
+        },
+    },
+};
+
 #endif

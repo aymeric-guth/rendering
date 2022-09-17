@@ -10,10 +10,6 @@
         __typeof__ (b) _b = (b); \
         _a < _b ? _a : _b; })
 
-// int clamp(int hi, int lo, int val)
-// {
-//     return MAX(MIN(hi, val), lo);
-// }
 int clamp(int hi, int lo, int val)
 {
     if (val > hi)
