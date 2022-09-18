@@ -51,43 +51,63 @@ void clearscreen(void)
     // printf("\033[2J");
 }
 
-// void draw(Pixel **framebuff)
-// {
-//     Pixel *px;
-//
-//     for (int j = 0; j < TERMY; j++) {
-//         for (int i = 0; i < TERMX; i++) {
-//             px = &framebuff[j][i];
-//             char c = " .,-~:;=!*#$@"[px->shader];
-//             const char *color = color_map[px->color];
-//             // enable color
-//             printf("%s", color);
-//             // move cursor to (x, y)
-//             printf("\033[%d;%dH", j, i * 2);
-//             printf("%c", c);
-//             // printf("\033[%d;%dH", j, i * 2 + 1);
-//             // printf("%c", c);
-//             printf("\x1b[0m");
-//         }
-//     }
-// }
-
-void draw(int x, int y, Color c, int shader)
+void draw(Pixel **framebuff)
 {
-    if (x < TERMX && x >= 0 && y < TERMY && y >= 0) {
-        const char *color = color_map[c];
-        // enable color
-        printf("%s", color);
-        // move cursor to (x, y)
-        printf("\033[%d;%dH", y, x * 2);
-        printf("%c", " .,-~:;=!*#$@"[shader]);
-        printf("\033[%d;%dH", y, x * 2 + 1);
-        printf("%c", c);
-        printf("\x1b[0m");
+    Pixel *px;
+    // printf("\033[2J");
+    printf("\033[0;0H");
+
+    for (int j = 0; j < TERMY; j++) {
+        for (int i = 0; i < TERMX; i++) {
+            px = &framebuff[j][i];
+            char c = " .,-~:;=!*#$@"[px->shader];
+            const char *color = color_map[px->color];
+            printf("%s", color);
+            printf("%c ", c);
+            printf("\x1b[0m");
+        }
+
+        printf("\n");
     }
+
+    //for (int j = 0; j < TERMY; j++) {
+    //    for (int i = 0; i < TERMX; i++) {
+    //        px = &framebuff[j][i];
+    //        char c = " .,-~:;=!*#$@"[px->shader];
+    //        const char *color = color_map[px->color];
+    //        // enable color
+    //        printf("%s", color);
+    //        // move cursor to (x, y)
+    //        printf("\033[%d;%dH", j, i * 2);
+    //        printf("%c", c);
+    //        // printf("\033[%d;%dH", j, i * 2 + 1);
+    //        // printf("%c", c);
+    //        printf("\x1b[0m");
+    //    }
+    //}
 }
 
-void drawline(int x1, int y1, int x2, int y2, Color c, int shader)
+void drawfb(Pixel **fb, int x, int y, Color c, int shader)
+{
+    if (x < TERMX && x >= 0 && y < TERMY && y >= 0) {
+        fb[y][x].shader = shader;
+        fb[y][x].color = c;
+    }
+
+    // if (x < TERMX && x >= 0 && y < TERMY && y >= 0) {
+    //     const char *color = color_map[c];
+    //     // enable color
+    //     printf("%s", color);
+    //     // move cursor to (x, y)
+    //     printf("\033[%d;%dH", y, x * 2);
+    //     printf("%c", " .,-~:;=!*#$@"[shader]);
+    //     printf("\033[%d;%dH", y, x * 2 + 1);
+    //     printf("%c", c);
+    //     printf("\x1b[0m");
+    // }
+}
+
+void drawline(Pixel **fb, int x1, int y1, int x2, int y2, Color c, int shader)
 {
     int x, y, dx, dy, dx1, dy1, px, py, xe, ye, i;
     dx = x2 - x1;
@@ -108,7 +128,7 @@ void drawline(int x1, int y1, int x2, int y2, Color c, int shader)
             xe = x1;
         }
 
-        draw(x, y, c, shader);
+        drawfb(fb, x, y, c, shader);
 
         for (i = 0; x < xe; i++) {
             x = x + 1;
@@ -124,7 +144,7 @@ void drawline(int x1, int y1, int x2, int y2, Color c, int shader)
                 px = px + 2 * (dy1 - dx1);
             }
 
-            draw(x, y, c, shader);
+            drawfb(fb, x, y, c, shader);
         }
     } else {
         if (dy >= 0) {
@@ -137,7 +157,7 @@ void drawline(int x1, int y1, int x2, int y2, Color c, int shader)
             ye = y1;
         }
 
-        draw(x, y, c, shader);
+        drawfb(fb, x, y, c, shader);
 
         for (i = 0; y < ye; i++) {
             y = y + 1;
@@ -153,7 +173,7 @@ void drawline(int x1, int y1, int x2, int y2, Color c, int shader)
                 py = py + 2 * (dx1 - dy1);
             }
 
-            draw(x, y, c, shader);
+            drawfb(fb, x, y, c, shader);
         }
     }
 }
@@ -186,9 +206,10 @@ void get_proj_mat(Render_Params *params, mat4x4 mat)
 
 int entrypoint_tri(Game_State *state, Render_Params *params)
 {
-    float **zbuff = state->zbuff;
+    // float **zbuff = state->zbuff;
     Q *q = state->q;
     Mesh *mesh = state->mesh;
+    Pixel **fb = state->framebuff;
     Transform_Vars *tf = params->tf;
     // clear screen
     printf("\033[2J");
@@ -201,6 +222,13 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         int termx = (int) params->term->x;
         int termy = (int) params->term->y;
         int elmt = 0;
+
+        for (int j = 0; j < termy; j++) {
+            for (int i = 0; i < termx; i++) {
+                fb[j][i].color = COLOR_NONE;
+                fb[j][i].shader = 0;
+            }
+        }
 
         while (Q_get(q, &elmt) > 0)
             process_input(tf, elmt);
@@ -217,18 +245,8 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         get_tr_mat(tf->v, tr_mat);
         Vec3 v0 = { .x = 0.f, .y = 0.f, .z = params->translation_ofst};
         Vec3 v1 = { .x = 1.f, .y = 1.f, .z = 0.f };
-
-        for (int j = 0; j < termy; j++) {
-            for (int i = 0; i < termx; i++) {
-                // re-init zbuffer
-                zbuff[j][i] = 0.f;
-            }
-        }
-
         // transformation pipeline
-        printf("\033[2J");
 
-        // clearscreen();
         for (int j = 0; j < mesh->s; j++) {
             Tri tri = *mesh[j].t;
             Color c = * (Color *)mesh[j].c;
@@ -255,12 +273,15 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
             int y2 = (int)tri.v[1].y;
             int x3 = (int)tri.v[2].x;
             int y3 = (int)tri.v[2].y;
-            drawline(x1, y1, x2, y2, c, 1);
-            drawline(x2, y2, x3, y3, c, 1);
-            drawline(x3, y3, x1, y1, c, 1);
+            drawline(fb, x1, y1, x2, y2, c, 12);
+            drawline(fb, x2, y2, x3, y3, c, 12);
+            drawline(fb, x3, y3, x1, y1, c, 12);
         }
 
-        msleep(20);
+        // printf("\033[2J");
+        // clearscreen();
+        draw(fb);
+        // msleep(20);
     }
 
     return 0;
@@ -270,8 +291,10 @@ int main()
 {
     Vec2 term;
     get_term_size(&term);
+    int termx = TERMX;
+    int termy = TERMY;
 
-    if (term.x <= 0.f || term.y <= 0)
+    if (termx <= 0 || termy <= 0)
         goto cleanup;
 
     // tty raw mode, non buffered io
@@ -302,17 +325,22 @@ int main()
         m[i].c = (void *)&_colors[i]->color;
     }
 
-    float **zbuff = (float **)malloc(sizeof(float *) * term.y);
+    Pixel **framebuff = (Pixel **) malloc(sizeof(Pixel *) * termy);
+    float **zbuff = (float **)malloc(sizeof(float *) * termy);
 
-    for (int i = 0; i < term.y; i++) {
-        float *pzb = (float *) malloc(sizeof(float) * term.x);
-        memset(pzb, 0, sizeof(float) * term.x);
-        zbuff[i] = pzb;
+    for (int j = 0; j < termy; j++) {
+        Pixel *pfb = (Pixel *) malloc(sizeof(Pixel) * termx);
+        memset(pfb, 0, sizeof(Pixel) * termx);
+        framebuff[j] = pfb;
+        float *pzb = (float *) malloc(sizeof(float) * termx);
+        memset(pzb, 0, sizeof(float) * termx);
+        zbuff[j] = pzb;
     }
 
     Game_State state = {
         .q = &q,
         .zbuff = zbuff,
+        .framebuff = framebuff,
         .mesh = m,
     };
     Vec3 ofst = {.x = 0.f, .y = 0.f, .z = 0.f};
@@ -339,6 +367,16 @@ cleanup:
 
     if (m)
         free(m);
+
+    if (framebuff) {
+        while (1) {
+            if (*framebuff) {
+                free(*framebuff);
+                framebuff++;
+            } else
+                break;
+        }
+    }
 
     if (zbuff) {
         while (1) {
