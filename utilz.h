@@ -50,3 +50,8 @@ float linear_interpolation(
 {
     return (x - src_min) * (dst_max - dst_min) / (src_max - src_min) + dst_min;
 }
+
+float lin_int(float xa, float ya, float xb, float yb, float y)
+{
+    return xa + (xb - xa) * (y - ya) / (yb - ya);
+}

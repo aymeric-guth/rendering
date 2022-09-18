@@ -74,6 +74,7 @@ void draw(Pixel **framebuff)
 
 void get_proj_mat(Render_Params *params, mat4x4 mat)
 {
+    // rectilinear projection
     float a = (float)params->term->y / (float)params->term->x;
     float fov = 1 / tanf(params->theta * 0.5f);
     float viewing_distance = params->viewing_distance;
@@ -111,26 +112,24 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
     printf("\e[?25l");
 
     for (int n = 0; n < CYCLES; n++) {
+        get_term_size(params->term);
+        int termx = (int) params->term->x;
+        int termy = (int) params->term->y;
         int elmt = 0;
 
         while (Q_get(q, &elmt) > 0)
             process_input(tf, elmt);
 
-        // re-init zbuffer
-        for (int j = 0; j < params->term->y; j++) {
-            for (int i = 0; i < params->term->x; i++)
+        for (int j = 0; j < termy; j++) {
+            for (int i = 0; i < termx; i++) {
+                // re-init zbuffer
                 zbuff[j][i] = 0.f;
+                // re-init frame-buffer
+                framebuff[j][i].shader = 0;
+                framebuff[j][i].color = COLOR_NONE;
+            }
         }
 
-        // re-init frame-buffer
-        {
-            for (int j = 0; j < params->term->y; j++)
-                for (int i = 0; i < params->term->x; i++) {
-                    framebuff[j][i].shader = 0;
-                    framebuff[j][i].color = COLOR_NONE;
-                }
-        }
-        get_term_size(params->term);
         mat4x4 proj_mat;
         get_proj_mat(params, proj_mat);
         mat3x3 yaw_mat;
@@ -145,39 +144,51 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
 
         // transformation pipeline
         for (int j = 0; j < SCENE_SIZE; j++) {
+            Tri tri;
+
             for (int i = 0; i < 3; i++) {
-                Vec3 v = mesh[j].v[i];
-                mat3x3_Vec3_mul(yaw_mat, &v, &v);
-                mat3x3_Vec3_mul(pitch_mat, &v, &v);
-                mat3x3_Vec3_mul(roll_mat, &v, &v);
-                mat4x3_Vec3_mul(tr_mat, &v, &v);
-                Vec3_add(&v, &v0, &v);
-                //
-                // rasterization ...
-                //
-                // rectilinear projection
-                mat4x4_Vec3_mul(proj_mat, &v, &v);
+                tri.v[i] = mesh[j].v[i];
+                Vec3 *v = &tri.v[i];
+                mat3x3_Vec3_mul(yaw_mat, v, v);
+                mat3x3_Vec3_mul(pitch_mat, v, v);
+                mat3x3_Vec3_mul(roll_mat, v, v);
+                mat4x3_Vec3_mul(tr_mat, v, v);
+                Vec3_add(v, &v0, v);
+                mat4x4_Vec3_mul(proj_mat, v, v);
                 {
-                    v.x += 1.f;
-                    v.y += 1.f;
-                    v.z += 1.f;
-                    v.x *= 0.5f * params->term->x;
-                    v.y *= 0.5f * params->term->y;
-                    v.z *= 0.5f;
+                    v->x += 1.f;
+                    v->y += 1.f;
+                    v->z += 1.f;
+                    v->x *= 0.5f * termx;
+                    v->y *= 0.5f * termy;
+                    v->z *= 0.5f;
                 }
                 {
-                    if (v.x > (params->term->x - 1.f) || v.x < 0.f || v.y > (params->term->y - 1.f) || v.y < 0.f)
+                    int x = (int)v->x;
+                    int y = (int)v->y;
+
+                    if (x > (termx - 1) || x < 0 || y > (termy - 1) || y < 0)
                         continue;
+                }
+            }
 
-                    // TODO
-                    int x = (int)v.x;
-                    int y = (int)v.y;
+            //
+            // rasterization ...
+            //
+            // for (int i = 0; i < 3; i++) {
+            //     tri.v[i];
+            //     printf("");
+            // }
+            // TODO
+            for (int i = 0; i < 3; i++) {
+                Vec3 *v = &tri.v[i];
+                int x = (int)v->x;
+                int y = (int)v->y;
 
-                    if (v.z < zbuff[y][x]) {
-                        zbuff[y][x] = v.z;
-                        framebuff[y][x].shader = px[j][i].shader;
-                        framebuff[y][x].color = px[j][i].color;
-                    }
+                if (v->z < zbuff[y][x]) {
+                    zbuff[y][x] = v->z;
+                    framebuff[y][x].shader = px[j][i].shader;
+                    framebuff[y][x].color = px[j][i].color;
                 }
             }
         }
