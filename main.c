@@ -7,6 +7,7 @@
 #include <sys/ioctl.h>
 #include <pthread.h>
 #include <termios.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "fifo.h"
@@ -32,11 +33,20 @@ void get_term_size(Vec2 *v)
     TERMY = (int) v->y;
 }
 
+void drawdebug(Telem *t)
+{
+    printf("\033[%d;%dH", TERMY - 1, TERMX - 1);
+    int it = t->it;
+    double fps = 1 / ((t->input + t->transform + t->rendering + t->drawing) / (double)it);
+    printf("FPS=%lf, IO=%lf, Transform=%lf, Rendering=%lf, Drawing=%lf", fps, t->input / it, t->transform / it, t->rendering / it, t->drawing / it);
+}
+
 void draw(Pixel **framebuff)
 {
     Pixel *px;
     printf("\033[0;0H");
     char *shader = " .,-~:;=!*#$@";
+    int last = 0;
 
     for (int j = 0; j < TERMY; j++) {
         for (int i = 0; i < TERMX; i++) {
@@ -49,8 +59,10 @@ void draw(Pixel **framebuff)
 
             px->shader = 0;
             px->color = COLOR_NONE;
+            last = i;
         }
 
+        printf("\033[%d;%dH", j, last * 2);
         // msleep(10);
     }
 }
@@ -60,84 +72,6 @@ void drawfb(Pixel **fb, int x, int y, Color c, int shader)
     if (x < TERMX && x >= 0 && y < TERMY && y >= 0) {
         fb[y][x].shader = shader;
         fb[y][x].color = c;
-    }
-}
-
-void drawlinevec(Pixel **fb, Raster *r)
-{
-    // void drawline(Pixel **fb, int x1, int y1, int x2, int y2, Color c, int shader)
-    int x1 = r->l->a->x;
-    int y1 = r->l->a->y;
-    int x2 = r->l->b->x;
-    int y2 = r->l->b->y;
-    int x, y, dx, dy, dx1, dy1, px, py, xe, ye, i;
-    dx = x2 - x1;
-    dy = y2 - y1;
-    dx1 = abs(dx);
-    dy1 = abs(dy);
-    px = 2 * dy1 - dx1;
-    py = 2 * dx1 - dy1;
-
-    if (dy1 <= dx1) {
-        if (dx >= 0) {
-            x = x1;
-            y = y1;
-            xe = x2;
-        } else {
-            x = x2;
-            y = y2;
-            xe = x1;
-        }
-
-        drawfb(fb, x, y, r->c, r->shader);
-
-        for (i = 0; x < xe; i++) {
-            x++;
-
-            if (px < 0)
-                px = px + 2 * dy1;
-            else {
-                if ((dx < 0 && dy < 0) || (dx > 0 && dy > 0))
-                    y++;
-                else
-                    y--;
-
-                px = px + 2 * (dy1 - dx1);
-            }
-
-            drawfb(fb, x, y, r->c, r->shader);
-        }
-
-        return;
-    }
-
-    if (dy >= 0) {
-        x = x1;
-        y = y1;
-        ye = y2;
-    } else {
-        x = x2;
-        y = y2;
-        ye = y1;
-    }
-
-    drawfb(fb, x, y, r->c, r->shader);
-
-    for (i = 0; y < ye; i++) {
-        y++;
-
-        if (py <= 0)
-            py = py + 2 * dx1;
-        else {
-            if ((dx < 0 && dy < 0) || (dx > 0 && dy > 0))
-                x++;
-            else
-                x--;
-
-            py = py + 2 * (dx1 - dy1);
-        }
-
-        drawfb(fb, x, y, r->c, r->shader);
     }
 }
 
@@ -240,6 +174,11 @@ void get_proj_mat(Render_Params *params, mat4x4 mat)
     mat[3][3] = 0.f;
 }
 
+double delta_time(struct timespec *start, struct timespec *end)
+{
+    return (end->tv_sec - start->tv_sec) + (end->tv_nsec - start->tv_nsec) / 1000000000.f;
+}
+
 int entrypoint_tri(Game_State *state, Render_Params *params)
 {
     // float **zbuff = state->zbuff;
@@ -251,8 +190,15 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
     printf("\033[2J");
     // hide cursor
     printf("\e[?25l");
+    struct timespec start, end;
+    #ifdef PERFCOUNT
+    Telem t = { .drawing = 0.f, .rendering = 0.f, .input = 0.f, .transform = 0.f, .it = 0};
+    #endif
 
     for (;;) {
+        #ifdef PERFCOUNT
+        clock_gettime(CLOCK_REALTIME, &start);
+        #endif
         // for (int n = 0; n < CYCLES; n++) {
         get_term_size(params->term);
         int termx = (int) params->term->x;
@@ -262,6 +208,11 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         while (Q_get(q, &elmt) > 0)
             process_input(tf, elmt);
 
+        #ifdef PERFCOUNT
+        clock_gettime(CLOCK_REALTIME, &end);
+        t.input += delta_time(&start, &end);
+        clock_gettime(CLOCK_REALTIME, &start);
+        #endif
         mat4x4 proj_mat;
         get_proj_mat(params, proj_mat);
         mat3x3 yaw_mat;
@@ -278,6 +229,11 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         mat3x3_mul(yaw_mat, pitch_mat, tmp_mat);
         mat3x3 world_mat;
         mat3x3_mul(roll_mat, tmp_mat, world_mat);
+        #ifdef PERFCOUNT
+        clock_gettime(CLOCK_REALTIME, &end);
+        t.transform += delta_time(&start, &end);
+        clock_gettime(CLOCK_REALTIME, &start);
+        #endif
 
         // transformation pipeline
 
@@ -325,12 +281,24 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
             drawline(fb, x3, y3, x1, y1, c, 12);
         }
 
+        #ifdef PERFCOUNT
+        clock_gettime(CLOCK_REALTIME, &end);
+        t.rendering += delta_time(&start, &end);
+        clock_gettime(CLOCK_REALTIME, &start);
+        #endif
         draw(fb);
-        msleep(20);
+        // msleep(20);
+        #ifdef PERFCOUNT
+        clock_gettime(CLOCK_REALTIME, &end);
+        t.drawing += delta_time(&start, &end);
+        drawdebug(&t);
+        t.it++;
+        #endif
     }
 
     return 0;
 }
+
 int main()
 {
     Vec2 term;
@@ -369,7 +337,7 @@ int main()
         m[i].c = (void *)&_colors[i]->color;
     }
 
-    Pixel **framebuff = (Pixel **) malloc(sizeof(Pixel *) * termy);
+    Pixel **framebuff = (Pixel **)malloc(sizeof(Pixel *) * termy);
     float **zbuff = (float **)malloc(sizeof(float *) * termy);
 
     for (int j = 0; j < termy; j++) {

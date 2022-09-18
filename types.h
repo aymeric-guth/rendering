@@ -51,9 +51,12 @@ typedef struct {
 } Render_Params;
 
 typedef struct {
-    Line_Int *l;
-    Color c;
-    int shader;
-} Raster;
+    double input;
+    double transform;
+    double rendering;
+    double rasterizing;
+    double drawing;
+    int it;
+} Telem;
 
 #endif
