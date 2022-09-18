@@ -2,6 +2,8 @@
 #include "input.h"
 #include "fifo.h"
 #include "constants.h"
+#include "utilz.h"
+
 
 void *kb_input(void *arg)
 {
@@ -10,6 +12,7 @@ void *kb_input(void *arg)
     while (1) {
         int c = getchar();
         Q_put(q, c);
+        msleep(20);
     }
 
     return NULL;
@@ -17,11 +20,6 @@ void *kb_input(void *arg)
 
 void process_input(Transform_Vars *tf, int elmt)
 {
-    float ROT_STEP = PI / 100.f;
-    float TRANSLATION_STEP = 0.05f;
-    // float ROT_STEP = PI / 75.f;
-    // float TRANSLATION_STEP = 1.f;
-
     switch (elmt) {
     case KEY_a:
         tf->beta -= ROT_STEP;
@@ -43,30 +41,30 @@ void process_input(Transform_Vars *tf, int elmt)
         break;
 
     case KEY_S:
-        tf->v->z -= TRANSLATION_STEP;
+        tf->v->z -= TR_STEP;
         break;
 
     case KEY_D:
         break;
 
     case KEY_W:
-        tf->v->z += TRANSLATION_STEP;
+        tf->v->z += TR_STEP;
         break;
 
     case KEY_h:
-        tf->v->x -= TRANSLATION_STEP;
+        tf->v->x -= TR_STEP;
         break;
 
     case KEY_j:
-        tf->v->y -= TRANSLATION_STEP;
+        tf->v->y -= TR_STEP;
         break;
 
     case KEY_k:
-        tf->v->y += TRANSLATION_STEP;
+        tf->v->y += TR_STEP;
         break;
 
     case KEY_l:
-        tf->v->x += TRANSLATION_STEP;
+        tf->v->x += TR_STEP;
         break;
     }
 }

@@ -10,8 +10,8 @@
 #include <unistd.h>
 
 #include "fifo.h"
-#include "types.h"
 #include "constants.h"
+#include "types.h"
 #include "utilz.h"
 #include "matrix.h"
 #include "input.h"
@@ -103,8 +103,7 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
     Pixel **framebuff = state->framebuff;
     float **zbuff = state->zbuff;
     Q *q = state->q;
-    Tri *mesh = state->mesh;
-    Pixel **px = state->px;
+    Mesh *mesh = state->mesh;
     Transform_Vars *tf = params->tf;
     // clear screen
     printf("\033[2J");
@@ -143,11 +142,11 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         Vec3 v0 = { .x = 0.f, .y = 0.f, .z = params->translation_ofst};
 
         // transformation pipeline
-        for (int j = 0; j < SCENE_SIZE; j++) {
-            Tri tri;
+        for (int j = 0; j < mesh->s; j++) {
+            Tri tri = *mesh[j].t;
+            Color c = * (Color *)mesh[j].c;
 
             for (int i = 0; i < 3; i++) {
-                tri.v[i] = mesh[j].v[i];
                 Vec3 *v = &tri.v[i];
                 mat3x3_Vec3_mul(yaw_mat, v, v);
                 mat3x3_Vec3_mul(pitch_mat, v, v);
@@ -158,17 +157,10 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
                 {
                     v->x += 1.f;
                     v->y += 1.f;
-                    v->z += 1.f;
+                    // v->z += 1.f;
                     v->x *= 0.5f * termx;
                     v->y *= 0.5f * termy;
-                    v->z *= 0.5f;
-                }
-                {
-                    int x = (int)v->x;
-                    int y = (int)v->y;
-
-                    if (x > (termx - 1) || x < 0 || y > (termy - 1) || y < 0)
-                        continue;
+                    // v->z *= 0.5f;
                 }
             }
 
@@ -185,16 +177,20 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
                 int x = (int)v->x;
                 int y = (int)v->y;
 
+                if (x > (termx - 1) || x < 0 || y > (termy - 1) || y < 0)
+                    continue;
+
                 if (v->z < zbuff[y][x]) {
                     zbuff[y][x] = v->z;
-                    framebuff[y][x].shader = px[j][i].shader;
-                    framebuff[y][x].color = px[j][i].color;
+                    framebuff[y][x].shader = 12;
+                    framebuff[y][x].color = c;
                 }
             }
         }
 
         // drawing routine
         draw(framebuff);
+        msleep(20);
     }
 
     return 0;
@@ -225,25 +221,17 @@ int main()
     Q q = { .head = 0, .tail = 0, .size = QUEUE_SIZE, .data = qp};
     pthread_create(&_kb_input, NULL, kb_input, &q);
     // world init
-    Tri *ptr = malloc(sizeof(Tri) * SCENE_SIZE);
+    Mesh *m = malloc(sizeof(Mesh) * SCENE_SIZE);
 
-    if (!ptr)
+    if (!m)
         goto cleanup;
 
-    memset(ptr, 0, sizeof(Tri) * SCENE_SIZE);
-    memcpy(ptr, _scene, sizeof(Tri) * SCENE_SIZE);
-    Pixel **ptr2 = malloc(sizeof(Pixel *) * SCENE_SIZE);
+    memset(m, 0, sizeof(Mesh) * SCENE_SIZE);
+    m->s = SCENE_SIZE;
 
-    if (!ptr2)
-        goto cleanup;
-
-    memset(ptr2, 0, sizeof(Pixel *) * SCENE_SIZE);
-
-    for (int i = 0; i < SCENE_SIZE; i++) {
-        Pixel *px = (Pixel *) malloc(sizeof(Pixel) * 3);
-        memset(px, 0, sizeof(Pixel) * 3);
-        memcpy(px, _colors[i], sizeof(Pixel) * 3);
-        ptr2[i] = px;
+    for (int i = 0; i < m->s; i++) {
+        m[i].t = &_scene[i];
+        m[i].c = (void *)&_colors[i]->color;
     }
 
     Pixel **framebuff = (Pixel **) malloc(sizeof(Pixel *) * termy);
@@ -262,8 +250,7 @@ int main()
         .q = &q,
         .framebuff = framebuff,
         .zbuff = zbuff,
-        .mesh = ptr,
-        .px = ptr2
+        .mesh = m,
     };
     Vec3 ofst = {.x = 0.f, .y = 0.f, .z = 0.f};
     Transform_Vars tf = {
@@ -287,18 +274,8 @@ cleanup:
     if (qp)
         free(qp);
 
-    if (ptr)
-        free(ptr);
-
-    if (ptr2) {
-        while (1) {
-            if (*ptr2) {
-                free(*ptr2);
-                ptr2++;
-            } else
-                break;
-        }
-    }
+    if (m)
+        free(m);
 
     if (framebuff) {
         while (1) {

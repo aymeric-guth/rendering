@@ -1,3 +1,4 @@
+#include "types.h"
 #include "constants.h"
 
 #ifndef INPUT_H

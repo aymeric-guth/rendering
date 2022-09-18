@@ -4,7 +4,6 @@
 // Demonstrated with void pointers and no memory management.
 // Note that empty is head==tail, thus only QUEUE_SIZE-1 entries may be used.
 #include <stdlib.h>
-#include <assert.h>
 
 #ifndef FIFO_H
 #define FIFO_H
@@ -19,4 +18,4 @@ typedef struct {
 int Q_get(Q *, int *);
 int Q_put(Q *, int);
 
-#endif /* FIFO_H */
+#endif

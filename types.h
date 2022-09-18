@@ -1,11 +1,10 @@
-#include "fifo.h"
 #include "matrix.h"
-#include <assert.h>
+#include "constants.h"
+#include "fifo.h"
 
 #ifndef TYPES_H
 #define TYPES_H
 
-typedef enum { COLOR_NONE, COLOR_BLACK, COLOR_RED, COLOR_GREEN, COLOR_YELLOW, COLOR_BLUE, COLOR_MAGENTA, COLOR_CYAN, COLOR_WHITE, COLOR_TEMPLATE } Color;
 
 static const char *color_map[] = {
     [COLOR_NONE] = "",
@@ -36,8 +35,7 @@ typedef struct {
     Q *q;
     Pixel **framebuff;
     float **zbuff;
-    Tri *mesh;
-    Pixel **px;
+    Mesh *mesh;
 } Game_State;
 
 typedef struct {

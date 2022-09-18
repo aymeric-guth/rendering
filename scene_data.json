@@ -44,19 +44,19 @@
       "x": 1.0,
       "y": 0.0,
       "z": 0.0,
-      "color": "COLOR_RED"
+      "color": "COLOR_CYAN"
     },
     {
       "x": 1.0,
       "y": 1.0,
       "z": 0.0,
-      "color": "COLOR_RED"
+      "color": "COLOR_CYAN"
     },
     {
       "x": 1.0,
       "y": 1.0,
       "z": 1.0,
-      "color": "COLOR_RED"
+      "color": "COLOR_CYAN"
     }
   ],
   [
@@ -64,19 +64,19 @@
       "x": 1.0,
       "y": 0.0,
       "z": 0.0,
-      "color": "COLOR_RED"
+      "color": "COLOR_CYAN"
     },
     {
       "x": 1.0,
       "y": 1.0,
       "z": 1.0,
-      "color": "COLOR_RED"
+      "color": "COLOR_CYAN"
     },
     {
       "x": 1.0,
       "y": 0.0,
       "z": 1.0,
-      "color": "COLOR_RED"
+      "color": "COLOR_CYAN"
     }
   ],
   [
@@ -84,19 +84,19 @@
       "x": 1.0,
       "y": 0.0,
       "z": 1.0,
-      "color": "COLOR_RED"
+      "color": "COLOR_GREEN"
     },
     {
       "x": 1.0,
       "y": 1.0,
       "z": 1.0,
-      "color": "COLOR_RED"
+      "color": "COLOR_GREEN"
     },
     {
       "x": 0.0,
       "y": 1.0,
       "z": 1.0,
-      "color": "COLOR_RED"
+      "color": "COLOR_GREEN"
     }
   ],
   [
@@ -104,19 +104,19 @@
       "x": 1.0,
       "y": 0.0,
       "z": 1.0,
-      "color": "COLOR_RED"
+      "color": "COLOR_GREEN"
     },
     {
       "x": 0.0,
       "y": 1.0,
       "z": 1.0,
-      "color": "COLOR_RED"
+      "color": "COLOR_GREEN"
     },
     {
       "x": 0.0,
       "y": 0.0,
       "z": 1.0,
-      "color": "COLOR_RED"
+      "color": "COLOR_GREEN"
     }
   ],
 
@@ -125,19 +125,19 @@
       "x": 0.0,
       "y": 0.0,
       "z": 1.0,
-      "color": "COLOR_"
+      "color": "COLOR_BLUE"
     },
     {
       "x": 0.0,
       "y": 1.0,
       "z": 1.0,
-      "color": "COLOR_"
+      "color": "COLOR_BLUE"
     },
     {
       "x": 0.0,
       "y": 1.0,
       "z": 0.0,
-      "color": "COLOR_"
+      "color": "COLOR_BLUE"
     }
   ],
   [
@@ -145,19 +145,19 @@
       "x": 0.0,
       "y": 0.0,
       "z": 1.0,
-      "color": "COLOR_"
+      "color": "COLOR_BLUE"
     },
     {
       "x": 0.0,
       "y": 1.0,
       "z": 0.0,
-      "color": "COLOR_"
+      "color": "COLOR_BLUE"
     },
     {
       "x": 0.0,
       "y": 0.0,
       "z": 0.0,
-      "color": "COLOR_"
+      "color": "COLOR_BLUE"
     }
   ],
   [
@@ -165,19 +165,19 @@
       "x": 0.0,
       "y": 1.0,
       "z": 0.0,
-      "color": "COLOR_"
+      "color": "COLOR_YELLOW"
     },
     {
       "x": 0.0,
       "y": 1.0,
       "z": 1.0,
-      "color": "COLOR_"
+      "color": "COLOR_YELLOW"
     },
     {
       "x": 1.0,
       "y": 1.0,
       "z": 1.0,
-      "color": "COLOR_"
+      "color": "COLOR_YELLOW"
     }
   ],
   [
@@ -185,19 +185,19 @@
       "x": 0.0,
       "y": 1.0,
       "z": 0.0,
-      "color": "COLOR_"
+      "color": "COLOR_YELLOW"
     },
     {
       "x": 1.0,
       "y": 1.0,
       "z": 1.0,
-      "color": "COLOR_"
+      "color": "COLOR_YELLOW"
     },
     {
       "x": 1.0,
       "y": 1.0,
       "z": 0.0,
-      "color": "COLOR_"
+      "color": "COLOR_YELLOW"
     }
   ],
   [
@@ -205,19 +205,19 @@
       "x": 1.0,
       "y": 0.0,
       "z": 1.0,
-      "color": "COLOR_"
+      "color": "COLOR_WHITE"
     },
     {
       "x": 0.0,
       "y": 0.0,
       "z": 1.0,
-      "color": "COLOR_"
+      "color": "COLOR_WHITE"
     },
     {
       "x": 0.0,
       "y": 0.0,
       "z": 0.0,
-      "color": "COLOR_"
+      "color": "COLOR_WHITE"
     }
   ],
   [
@@ -225,19 +225,19 @@
       "x": 1.0,
       "y": 0.0,
       "z": 1.0,
-      "color": "COLOR_"
+      "color": "COLOR_WHITE"
     },
     {
       "x": 0.0,
       "y": 0.0,
       "z": 0.0,
-      "color": "COLOR_"
+      "color": "COLOR_WHITE"
     },
     {
       "x": 1.0,
       "y": 0.0,
       "z": 0.0,
-      "color": "COLOR_"
+      "color": "COLOR_WHITE"
     }
   ]
 ]

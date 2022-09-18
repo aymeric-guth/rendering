@@ -10,7 +10,7 @@
         __typeof__ (b) _b = (b); \
         _a < _b ? _a : _b; })
 
-int clamp(int hi, int lo, int val)
+static int clamp(int hi, int lo, int val)
 {
     if (val > hi)
         return hi;
@@ -20,7 +20,7 @@ int clamp(int hi, int lo, int val)
         return val;
 }
 
-int msleep(long msec)
+static int msleep(long msec)
 {
     struct timespec ts;
     int res;
@@ -40,7 +40,7 @@ int msleep(long msec)
     return res;
 }
 
-float linear_interpolation(
+static float linear_interpolation(
     float src_min,
     float src_max,
     float dst_min,
@@ -51,7 +51,7 @@ float linear_interpolation(
     return (x - src_min) * (dst_max - dst_min) / (src_max - src_min) + dst_min;
 }
 
-float lin_int(float xa, float ya, float xb, float yb, float y)
+static float lin_int(float xa, float ya, float xb, float yb, float y)
 {
     return xa + (xb - xa) * (y - ya) / (yb - ya);
 }

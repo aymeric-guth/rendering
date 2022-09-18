@@ -51,7 +51,8 @@ for i1, tri in enumerate(scene):
     f.write(indent + "{\n")
     for i2, v in enumerate(tri):
         f.write(indent * 2 + "{\n")
-        f.write(indent * 3 + ".color = " + v.get("color") + "WHITE" + ",\n")
+        # f.write(indent * 3 + ".color = " + "COLOR_WHITE" + ",\n")
+        f.write(indent * 3 + ".color = " + v.get("color") + "" + ",\n")
         f.write(indent * 3 + ".shader = 1\n")
         f.write(indent * 2 + "},\n")
     f.write(indent + "},\n")

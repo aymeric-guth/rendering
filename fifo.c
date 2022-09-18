@@ -2,7 +2,6 @@
 #include <string.h>
 
 #include "fifo.h"
-#define QUEUE_SIZE 16
 
 
 int Q_get(Q *q, int *retval)

@@ -1,11 +1,13 @@
+#include <stddef.h>
+
 #ifndef MATRIX_H
 #define MATRIX_H
 
-#include <stddef.h>
 typedef struct {
     float x;
     float y;
     float z;
+    float w;
 } Vec3;
 
 typedef struct {
@@ -14,18 +16,12 @@ typedef struct {
 } Vec2;
 
 typedef struct {
-    float x;
-    float y;
-    float z;
-    float w;
-} Vec4;
-
-typedef struct {
     Vec3 v[3];
 } Tri;
 
 typedef struct {
     Tri *t;
+    void *c;
     size_t s;
 } Mesh;
 
@@ -34,6 +30,12 @@ typedef float mat4x3[4][3];
 typedef float mat3x3[3][3];
 
 void Vec3_add(Vec3 *, Vec3 *, Vec3 *);
+void Vec3_mul(Vec3 *, Vec3 *, Vec3 *);
+void Vec3_dot(Vec3 *, Vec3 *, Vec3 *);
+void Vec3_cross(Vec3 *, Vec3 *, Vec3 *);
+
+void mat4x4_mul(mat4x4, mat4x4, mat4x4);
+
 void mat4x4_Vec3_mul(mat4x4, Vec3 *, Vec3 *);
 void mat3x3_Vec3_mul(mat3x3, Vec3 *, Vec3 *);
 void mat4x3_Vec3_mul(mat4x3, Vec3 *, Vec3 *);
