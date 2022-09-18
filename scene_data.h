@@ -95,169 +95,169 @@ static Tri _scene[] = {
 static Pixel _colors[SCENE_SIZE][3] = {
     {
         {
-            .color = COLOR_RED,
+            .color = COLOR_WHITE,
             .shader = 1
         },
         {
-            .color = COLOR_RED,
+            .color = COLOR_WHITE,
             .shader = 1
         },
         {
-            .color = COLOR_RED,
-            .shader = 1
-        },
-    },
-    {
-        {
-            .color = COLOR_RED,
-            .shader = 1
-        },
-        {
-            .color = COLOR_RED,
-            .shader = 1
-        },
-        {
-            .color = COLOR_RED,
+            .color = COLOR_WHITE,
             .shader = 1
         },
     },
     {
         {
-            .color = COLOR_RED,
+            .color = COLOR_WHITE,
             .shader = 1
         },
         {
-            .color = COLOR_RED,
+            .color = COLOR_WHITE,
             .shader = 1
         },
         {
-            .color = COLOR_RED,
-            .shader = 1
-        },
-    },
-    {
-        {
-            .color = COLOR_RED,
-            .shader = 1
-        },
-        {
-            .color = COLOR_RED,
-            .shader = 1
-        },
-        {
-            .color = COLOR_RED,
+            .color = COLOR_WHITE,
             .shader = 1
         },
     },
     {
         {
-            .color = COLOR_RED,
+            .color = COLOR_WHITE,
             .shader = 1
         },
         {
-            .color = COLOR_RED,
+            .color = COLOR_WHITE,
             .shader = 1
         },
         {
-            .color = COLOR_RED,
-            .shader = 1
-        },
-    },
-    {
-        {
-            .color = COLOR_RED,
-            .shader = 1
-        },
-        {
-            .color = COLOR_RED,
-            .shader = 1
-        },
-        {
-            .color = COLOR_RED,
+            .color = COLOR_WHITE,
             .shader = 1
         },
     },
     {
         {
-            .color = COLOR_RED,
+            .color = COLOR_WHITE,
             .shader = 1
         },
         {
-            .color = COLOR_RED,
+            .color = COLOR_WHITE,
             .shader = 1
         },
         {
-            .color = COLOR_RED,
-            .shader = 1
-        },
-    },
-    {
-        {
-            .color = COLOR_RED,
-            .shader = 1
-        },
-        {
-            .color = COLOR_RED,
-            .shader = 1
-        },
-        {
-            .color = COLOR_RED,
+            .color = COLOR_WHITE,
             .shader = 1
         },
     },
     {
         {
-            .color = COLOR_RED,
+            .color = COLOR_WHITE,
             .shader = 1
         },
         {
-            .color = COLOR_RED,
+            .color = COLOR_WHITE,
             .shader = 1
         },
         {
-            .color = COLOR_RED,
-            .shader = 1
-        },
-    },
-    {
-        {
-            .color = COLOR_RED,
-            .shader = 1
-        },
-        {
-            .color = COLOR_RED,
-            .shader = 1
-        },
-        {
-            .color = COLOR_RED,
+            .color = COLOR_WHITE,
             .shader = 1
         },
     },
     {
         {
-            .color = COLOR_RED,
+            .color = COLOR_WHITE,
             .shader = 1
         },
         {
-            .color = COLOR_RED,
+            .color = COLOR_WHITE,
             .shader = 1
         },
         {
-            .color = COLOR_RED,
+            .color = COLOR_WHITE,
             .shader = 1
         },
     },
     {
         {
-            .color = COLOR_RED,
+            .color = COLOR_WHITE,
             .shader = 1
         },
         {
-            .color = COLOR_RED,
+            .color = COLOR_WHITE,
             .shader = 1
         },
         {
-            .color = COLOR_RED,
+            .color = COLOR_WHITE,
+            .shader = 1
+        },
+    },
+    {
+        {
+            .color = COLOR_WHITE,
+            .shader = 1
+        },
+        {
+            .color = COLOR_WHITE,
+            .shader = 1
+        },
+        {
+            .color = COLOR_WHITE,
+            .shader = 1
+        },
+    },
+    {
+        {
+            .color = COLOR_WHITE,
+            .shader = 1
+        },
+        {
+            .color = COLOR_WHITE,
+            .shader = 1
+        },
+        {
+            .color = COLOR_WHITE,
+            .shader = 1
+        },
+    },
+    {
+        {
+            .color = COLOR_WHITE,
+            .shader = 1
+        },
+        {
+            .color = COLOR_WHITE,
+            .shader = 1
+        },
+        {
+            .color = COLOR_WHITE,
+            .shader = 1
+        },
+    },
+    {
+        {
+            .color = COLOR_WHITE,
+            .shader = 1
+        },
+        {
+            .color = COLOR_WHITE,
+            .shader = 1
+        },
+        {
+            .color = COLOR_WHITE,
+            .shader = 1
+        },
+    },
+    {
+        {
+            .color = COLOR_WHITE,
+            .shader = 1
+        },
+        {
+            .color = COLOR_WHITE,
+            .shader = 1
+        },
+        {
+            .color = COLOR_WHITE,
             .shader = 1
         },
     },
