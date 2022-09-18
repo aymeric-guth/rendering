@@ -33,6 +33,7 @@ typedef struct {
 
 typedef struct {
     Q *q;
+    float **zbuff;
     Mesh *mesh;
 } Game_State;
 

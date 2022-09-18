@@ -74,15 +74,17 @@ void clearscreen(void)
 
 void draw(int x, int y, Color c, int shader)
 {
-    const char *color = color_map[c];
-    // enable color
-    printf("%s", color);
-    // move cursor to (x, y)
-    printf("\033[%d;%dH", y, x * 2);
-    printf("%c", " .,-~:;=!*#$@"[shader]);
-    // printf("\033[%d;%dH", j, i * 2 + 1);
-    // printf("%c", c);
-    printf("\x1b[0m");
+    if (x < TERMX && x >= 0 && y < TERMY && y >= 0) {
+        const char *color = color_map[c];
+        // enable color
+        printf("%s", color);
+        // move cursor to (x, y)
+        printf("\033[%d;%dH", y, x * 2);
+        printf("%c", " .,-~:;=!*#$@"[shader]);
+        printf("\033[%d;%dH", y, x * 2 + 1);
+        printf("%c", c);
+        printf("\x1b[0m");
+    }
 }
 
 void drawline(int x1, int y1, int x2, int y2, Color c, int shader)
@@ -184,7 +186,6 @@ void get_proj_mat(Render_Params *params, mat4x4 mat)
 
 int entrypoint_tri(Game_State *state, Render_Params *params)
 {
-    Pixel **framebuff = state->framebuff;
     float **zbuff = state->zbuff;
     Q *q = state->q;
     Mesh *mesh = state->mesh;
@@ -194,7 +195,8 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
     // hide cursor
     printf("\e[?25l");
 
-    for (int n = 0; n < CYCLES; n++) {
+    for (;;) {
+        // for (int n = 0; n < CYCLES; n++) {
         get_term_size(params->term);
         int termx = (int) params->term->x;
         int termy = (int) params->term->y;
@@ -203,15 +205,6 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         while (Q_get(q, &elmt) > 0)
             process_input(tf, elmt);
 
-        // for (int j = 0; j < termy; j++) {
-        //     for (int i = 0; i < termx; i++) {
-        //         // re-init zbuffer
-        //         zbuff[j][i] = 0.f;
-        //         // re-init frame-buffer
-        //         framebuff[j][i].shader = 0;
-        //         framebuff[j][i].color = COLOR_NONE;
-        //     }
-        // }
         mat4x4 proj_mat;
         get_proj_mat(params, proj_mat);
         mat3x3 yaw_mat;
@@ -224,9 +217,18 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         get_tr_mat(tf->v, tr_mat);
         Vec3 v0 = { .x = 0.f, .y = 0.f, .z = params->translation_ofst};
         Vec3 v1 = { .x = 1.f, .y = 1.f, .z = 0.f };
-        // transformation pipeline
-        clearscreen();
 
+        for (int j = 0; j < termy; j++) {
+            for (int i = 0; i < termx; i++) {
+                // re-init zbuffer
+                zbuff[j][i] = 0.f;
+            }
+        }
+
+        // transformation pipeline
+        printf("\033[2J");
+
+        // clearscreen();
         for (int j = 0; j < mesh->s; j++) {
             Tri tri = *mesh[j].t;
             Color c = * (Color *)mesh[j].c;
@@ -300,8 +302,17 @@ int main()
         m[i].c = (void *)&_colors[i]->color;
     }
 
+    float **zbuff = (float **)malloc(sizeof(float *) * term.y);
+
+    for (int i = 0; i < term.y; i++) {
+        float *pzb = (float *) malloc(sizeof(float) * term.x);
+        memset(pzb, 0, sizeof(float) * term.x);
+        zbuff[i] = pzb;
+    }
+
     Game_State state = {
         .q = &q,
+        .zbuff = zbuff,
         .mesh = m,
     };
     Vec3 ofst = {.x = 0.f, .y = 0.f, .z = 0.f};
@@ -328,6 +339,16 @@ cleanup:
 
     if (m)
         free(m);
+
+    if (zbuff) {
+        while (1) {
+            if (*zbuff) {
+                free(*zbuff);
+                zbuff++;
+            } else
+                break;
+        }
+    }
 
     clearscreen();
     // show cursor
