@@ -140,6 +140,7 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         mat4x3 tr_mat;
         get_tr_mat(tf->v, tr_mat);
         Vec3 v0 = { .x = 0.f, .y = 0.f, .z = params->translation_ofst};
+        Vec3 v1 = { .x = 1.f, .y = 1.f, .z = 0.f };
 
         // transformation pipeline
         for (int j = 0; j < mesh->s; j++) {
@@ -155,12 +156,11 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
                 Vec3_add(v, &v0, v);
                 mat4x4_Vec3_mul(proj_mat, v, v);
                 {
-                    v->x += 1.f;
-                    v->y += 1.f;
-                    // v->z += 1.f;
+                    Vec3_add(v, &v1, v);
+                    // v->x += 1.f;
+                    // v->y += 1.f;
                     v->x *= 0.5f * termx;
                     v->y *= 0.5f * termy;
-                    // v->z *= 0.5f;
                 }
             }
 

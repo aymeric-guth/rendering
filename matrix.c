@@ -8,6 +8,13 @@ void Vec3_add(Vec3 *i1, Vec3 *i2, Vec3 *o)
     o->z = i1->z + i2->z;
 }
 
+void Vec3_scale(Vec3 *i, float k, Vec3 *o)
+{
+    o->x = i->x * k;
+    o->y = i->y * k;
+    o->z = i->z * k;
+}
+
 void mat4x4_Vec3_mul(mat4x4 mat, Vec3 *i, Vec3 *o)
 {
     float x = i->x;

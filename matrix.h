@@ -31,6 +31,7 @@ typedef float mat3x3[3][3];
 
 void Vec3_add(Vec3 *, Vec3 *, Vec3 *);
 void Vec3_mul(Vec3 *, Vec3 *, Vec3 *);
+void Vec3_scale(Vec3 *, float, Vec3 *);
 void Vec3_dot(Vec3 *, Vec3 *, Vec3 *);
 void Vec3_cross(Vec3 *, Vec3 *, Vec3 *);
 
