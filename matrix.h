@@ -16,6 +16,16 @@ typedef struct {
 } Vec2;
 
 typedef struct {
+    int x;
+    int y;
+} Vec2_Int;
+
+typedef struct {
+    Vec2_Int *a;
+    Vec2_Int *b;
+} Line_Int;
+
+typedef struct {
     Vec3 v[3];
 } Tri;
 
@@ -45,5 +55,7 @@ void get_yaw_mat(float, mat3x3);
 void get_pitch_mat(float, mat3x3);
 void get_roll_mat(float, mat3x3);
 void get_tr_mat(Vec3 *, mat3x3);
+
+void mat3x3_mul(mat3x3, mat3x3, mat3x3);
 
 #endif

@@ -50,4 +50,10 @@ typedef struct {
     float theta; // FOV
 } Render_Params;
 
+typedef struct {
+    Line_Int *l;
+    Color c;
+    int shader;
+} Raster;
+
 #endif

@@ -32,25 +32,6 @@ void get_term_size(Vec2 *v)
     TERMY = (int) v->y;
 }
 
-void clearscreen(void)
-{
-    //printf("\033[XA"); // Move up X lines;
-    //printf("\033[XB"); // Move down X lines;
-    //printf("\033[XC"); // Move right X column;
-    //printf("\033[XD"); // Move left X column;
-    //printf("\033[2J"); // Clear screen
-    for (int j = 0; j < TERMY; j++) {
-        for (int i = 0; i < TERMX * 2; i++) {
-            // printf("\x1b[H");
-            // move cursor to (y, x)
-            printf("\033[%d;%dH", j, i);
-            printf(" ");
-        }
-    }
-
-    // printf("\033[2J");
-}
-
 void draw(Pixel **framebuff)
 {
     Pixel *px;
@@ -80,18 +61,84 @@ void drawfb(Pixel **fb, int x, int y, Color c, int shader)
         fb[y][x].shader = shader;
         fb[y][x].color = c;
     }
+}
 
-    // if (x < TERMX && x >= 0 && y < TERMY && y >= 0) {
-    //     const char *color = color_map[c];
-    //     // enable color
-    //     printf("%s", color);
-    //     // move cursor to (x, y)
-    //     printf("\033[%d;%dH", y, x * 2);
-    //     printf("%c", " .,-~:;=!*#$@"[shader]);
-    //     printf("\033[%d;%dH", y, x * 2 + 1);
-    //     printf("%c", c);
-    //     printf("\x1b[0m");
-    // }
+void drawlinevec(Pixel **fb, Raster *r)
+{
+    // void drawline(Pixel **fb, int x1, int y1, int x2, int y2, Color c, int shader)
+    int x1 = r->l->a->x;
+    int y1 = r->l->a->y;
+    int x2 = r->l->b->x;
+    int y2 = r->l->b->y;
+    int x, y, dx, dy, dx1, dy1, px, py, xe, ye, i;
+    dx = x2 - x1;
+    dy = y2 - y1;
+    dx1 = abs(dx);
+    dy1 = abs(dy);
+    px = 2 * dy1 - dx1;
+    py = 2 * dx1 - dy1;
+
+    if (dy1 <= dx1) {
+        if (dx >= 0) {
+            x = x1;
+            y = y1;
+            xe = x2;
+        } else {
+            x = x2;
+            y = y2;
+            xe = x1;
+        }
+
+        drawfb(fb, x, y, r->c, r->shader);
+
+        for (i = 0; x < xe; i++) {
+            x++;
+
+            if (px < 0)
+                px = px + 2 * dy1;
+            else {
+                if ((dx < 0 && dy < 0) || (dx > 0 && dy > 0))
+                    y++;
+                else
+                    y--;
+
+                px = px + 2 * (dy1 - dx1);
+            }
+
+            drawfb(fb, x, y, r->c, r->shader);
+        }
+
+        return;
+    }
+
+    if (dy >= 0) {
+        x = x1;
+        y = y1;
+        ye = y2;
+    } else {
+        x = x2;
+        y = y2;
+        ye = y1;
+    }
+
+    drawfb(fb, x, y, r->c, r->shader);
+
+    for (i = 0; y < ye; i++) {
+        y++;
+
+        if (py <= 0)
+            py = py + 2 * dx1;
+        else {
+            if ((dx < 0 && dy < 0) || (dx > 0 && dy > 0))
+                x++;
+            else
+                x--;
+
+            py = py + 2 * (dx1 - dy1);
+        }
+
+        drawfb(fb, x, y, r->c, r->shader);
+    }
 }
 
 void drawline(Pixel **fb, int x1, int y1, int x2, int y2, Color c, int shader)
@@ -227,6 +274,11 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         get_tr_mat(tf->v, tr_mat);
         Vec3 v0 = { .x = 0.f, .y = 0.f, .z = params->translation_ofst};
         Vec3 v1 = { .x = 1.f, .y = 1.f, .z = 0.f };
+        mat3x3 tmp_mat;
+        mat3x3_mul(yaw_mat, pitch_mat, tmp_mat);
+        mat3x3 world_mat;
+        mat3x3_mul(roll_mat, tmp_mat, world_mat);
+
         // transformation pipeline
 
         for (int j = 0; j < mesh->s; j++) {
@@ -235,9 +287,10 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
 
             for (int i = 0; i < 3; i++) {
                 Vec3 *v = &tri.v[i];
-                mat3x3_Vec3_mul(yaw_mat, v, v);
-                mat3x3_Vec3_mul(pitch_mat, v, v);
-                mat3x3_Vec3_mul(roll_mat, v, v);
+                mat3x3_Vec3_mul(world_mat, v, v);
+                // mat3x3_Vec3_mul(yaw_mat, v, v);
+                // mat3x3_Vec3_mul(pitch_mat, v, v);
+                // mat3x3_Vec3_mul(roll_mat, v, v);
                 mat4x3_Vec3_mul(tr_mat, v, v);
                 Vec3_add(v, &v0, v);
                 mat4x4_Vec3_mul(proj_mat, v, v);
@@ -249,6 +302,18 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
             }
 
             // rasterization ...
+            // Vec2_Int va = { .x = (int)tri.v[0].x, .y = (int)tri.v[0].y };
+            // Vec2_Int vb = { .x = (int)tri.v[1].x, .y = (int)tri.v[1].y };
+            // Vec2_Int vc = { .x = (int)tri.v[2].x, .y = (int)tri.v[2].y };
+            // Line_Int l1 = { .a = &va, .b = &vb };
+            // Line_Int l2 = { .a = &vb, .b = &vc };
+            // Line_Int l3 = { .a = &vc, .b = &va };
+            // Raster r1 = { .l = &l1, .c = c, .shader = 12};
+            // Raster r2 = { .l = &l2, .c = c, .shader = 12};
+            // Raster r3 = { .l = &l3, .c = c, .shader = 12};
+            // drawlinevec(fb, &r1);
+            // drawlinevec(fb, &r2);
+            // drawlinevec(fb, &r3);
             int x1 = (int)tri.v[0].x;
             int y1 = (int)tri.v[0].y;
             int x2 = (int)tri.v[1].x;
@@ -367,7 +432,6 @@ cleanup:
         }
     }
 
-    clearscreen();
     // show cursor
     printf("\e[?25h");
     return 0;

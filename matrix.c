@@ -113,3 +113,16 @@ void get_tr_mat(Vec3 *vec, mat4x3 mat)
     mat[2][2] = 1.f;
     mat[3][2] = vec->z;
 }
+
+void mat3x3_mul(mat3x3 mata, mat3x3 matb, mat3x3 mat)
+{
+    mat[0][0] = mata[0][0] * matb[0][0] + mata[0][1] * matb[1][0] + mata[0][2] * matb[2][0];
+    mat[0][1] = mata[0][0] * matb[0][1] + mata[0][1] * matb[1][1] + mata[0][2] * matb[2][1];
+    mat[0][2] = mata[0][0] * matb[0][2] + mata[0][1] * matb[1][2] + mata[0][2] * matb[2][2];
+    mat[1][0] = mata[1][0] * matb[0][0] + mata[1][1] * matb[1][0] + mata[1][2] * matb[2][0];
+    mat[1][1] = mata[1][0] * matb[0][1] + mata[1][1] * matb[1][1] + mata[1][2] * matb[2][1];
+    mat[1][2] = mata[1][0] * matb[0][2] + mata[1][1] * matb[1][2] + mata[1][2] * matb[2][2];
+    mat[2][0] = mata[2][0] * matb[0][0] + mata[2][1] * matb[1][0] + mata[2][2] * matb[2][0];
+    mat[2][1] = mata[2][0] * matb[0][1] + mata[2][1] * matb[1][1] + mata[2][2] * matb[2][1];
+    mat[2][2] = mata[2][0] * matb[0][2] + mata[2][1] * matb[1][2] + mata[2][2] * matb[2][2];
+}
