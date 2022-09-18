@@ -35,6 +35,7 @@ typedef struct {
     Q *q;
     float **zbuff;
     Pixel **framebuff;
+    Pixel **last;
     Mesh *mesh;
 } Game_State;
 

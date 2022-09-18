@@ -54,37 +54,24 @@ void clearscreen(void)
 void draw(Pixel **framebuff)
 {
     Pixel *px;
-    // printf("\033[2J");
     printf("\033[0;0H");
+    char *shader = " .,-~:;=!*#$@";
 
     for (int j = 0; j < TERMY; j++) {
         for (int i = 0; i < TERMX; i++) {
             px = &framebuff[j][i];
-            char c = " .,-~:;=!*#$@"[px->shader];
-            const char *color = color_map[px->color];
-            printf("%s", color);
-            printf("%c ", c);
-            printf("\x1b[0m");
+
+            if (px->shader > 0)
+                printf("\033[%d;%dH%s%c \x1b[0m", j, i * 2, color_map[px->color], shader[px->shader]);
+            else
+                printf("\033[%d;%dH  ", j, i * 2);
+
+            px->shader = 0;
+            px->color = COLOR_NONE;
         }
 
-        printf("\n");
+        // msleep(10);
     }
-
-    //for (int j = 0; j < TERMY; j++) {
-    //    for (int i = 0; i < TERMX; i++) {
-    //        px = &framebuff[j][i];
-    //        char c = " .,-~:;=!*#$@"[px->shader];
-    //        const char *color = color_map[px->color];
-    //        // enable color
-    //        printf("%s", color);
-    //        // move cursor to (x, y)
-    //        printf("\033[%d;%dH", j, i * 2);
-    //        printf("%c", c);
-    //        // printf("\033[%d;%dH", j, i * 2 + 1);
-    //        // printf("%c", c);
-    //        printf("\x1b[0m");
-    //    }
-    //}
 }
 
 void drawfb(Pixel **fb, int x, int y, Color c, int shader)
@@ -131,50 +118,52 @@ void drawline(Pixel **fb, int x1, int y1, int x2, int y2, Color c, int shader)
         drawfb(fb, x, y, c, shader);
 
         for (i = 0; x < xe; i++) {
-            x = x + 1;
+            x++;
 
             if (px < 0)
                 px = px + 2 * dy1;
             else {
                 if ((dx < 0 && dy < 0) || (dx > 0 && dy > 0))
-                    y = y + 1;
+                    y++;
                 else
-                    y = y - 1;
+                    y--;
 
                 px = px + 2 * (dy1 - dx1);
             }
 
             drawfb(fb, x, y, c, shader);
         }
+
+        return;
+    }
+
+    if (dy >= 0) {
+        x = x1;
+        y = y1;
+        ye = y2;
     } else {
-        if (dy >= 0) {
-            x = x1;
-            y = y1;
-            ye = y2;
-        } else {
-            x = x2;
-            y = y2;
-            ye = y1;
+        x = x2;
+        y = y2;
+        ye = y1;
+    }
+
+    drawfb(fb, x, y, c, shader);
+
+    for (i = 0; y < ye; i++) {
+        y++;
+
+        if (py <= 0)
+            py = py + 2 * dx1;
+        else {
+            if ((dx < 0 && dy < 0) || (dx > 0 && dy > 0))
+                x++;
+            else
+                x--;
+
+            py = py + 2 * (dx1 - dy1);
         }
 
         drawfb(fb, x, y, c, shader);
-
-        for (i = 0; y < ye; i++) {
-            y = y + 1;
-
-            if (py <= 0)
-                py = py + 2 * dx1;
-            else {
-                if ((dx < 0 && dy < 0) || (dx > 0 && dy > 0))
-                    x = x + 1;
-                else
-                    x = x - 1;
-
-                py = py + 2 * (dx1 - dy1);
-            }
-
-            drawfb(fb, x, y, c, shader);
-        }
     }
 }
 
@@ -223,13 +212,6 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         int termy = (int) params->term->y;
         int elmt = 0;
 
-        for (int j = 0; j < termy; j++) {
-            for (int i = 0; i < termx; i++) {
-                fb[j][i].color = COLOR_NONE;
-                fb[j][i].shader = 0;
-            }
-        }
-
         while (Q_get(q, &elmt) > 0)
             process_input(tf, elmt);
 
@@ -261,8 +243,8 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
                 mat4x4_Vec3_mul(proj_mat, v, v);
                 {
                     Vec3_add(v, &v1, v);
-                    v->x *= 0.5f * termx;
-                    v->y *= 0.5f * termy;
+                    v->x *= 0.5f * (float)termx;
+                    v->y *= 0.5f * (float)termy;
                 }
             }
 
@@ -278,15 +260,12 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
             drawline(fb, x3, y3, x1, y1, c, 12);
         }
 
-        // printf("\033[2J");
-        // clearscreen();
         draw(fb);
-        // msleep(20);
+        msleep(20);
     }
 
     return 0;
 }
-
 int main()
 {
     Vec2 term;
