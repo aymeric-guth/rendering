@@ -17,8 +17,8 @@ typedef enum {
     COLOR_WHITE,
     COLOR_TEMPLATE
 } Color;
-#define ROT_STEP PI / 100.f;
-#define TR_STEP 0.05f;
+#define ROT_STEP PI / 75.f;
+#define TR_STEP 0.1f;
 #define PERFCOUNT
 
 #endif

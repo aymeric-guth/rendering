@@ -41,6 +41,40 @@ void drawdebug(Telem *t)
     printf("FPS=%lf, IO=%lf, Transform=%lf, Rendering=%lf, Drawing=%lf", fps, t->input / it, t->transform / it, t->rendering / it, t->drawing / it);
 }
 
+void drawb(Pixel **framebuff)
+{
+    const size_t BUFFSIZE = TERMX * 10;
+    Pixel *px;
+    char *shader = " .,-~:;=!*#$@";
+    char buff[BUFFSIZE];
+
+    for (int j = 0; j < TERMY; j++) {
+        memset(buff, 0, BUFFSIZE);
+        char *c = buff;
+
+        for (int i = 0; i < TERMX; i++) {
+            px = &framebuff[j][i];
+
+            if (px->shader > 0 && px->color != COLOR_NONE) {
+                strcpy(c, color_map[px->color]);
+                c += 7;
+                strcpy(c++, &shader[px->shader]);
+                strcpy(c++, " ");
+            } else {
+                strcpy(c, "  ");
+                c += 2;
+            }
+
+            px->shader = 0;
+            px->color = COLOR_NONE;
+        }
+
+        // move cursor to line j + end color
+        printf("\033[%d;0H%s\x1b[0m\n", j, buff);
+        //msleep(10);
+    }
+}
+
 void draw(Pixel **framebuff)
 {
     Pixel *px;
@@ -194,12 +228,13 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
     #ifdef PERFCOUNT
     Telem t = { .drawing = 0.f, .rendering = 0.f, .input = 0.f, .transform = 0.f, .it = 0};
     #endif
+    Vec3 camera = {0.f, 0.f, 0.f, 0.f};
 
     for (;;) {
+        // for (int n = 0; n < CYCLES; n++) {
         #ifdef PERFCOUNT
         clock_gettime(CLOCK_REALTIME, &start);
         #endif
-        // for (int n = 0; n < CYCLES; n++) {
         get_term_size(params->term);
         int termx = (int) params->term->x;
         int termy = (int) params->term->y;
@@ -223,6 +258,9 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         get_roll_mat(tf->gamma, roll_mat);
         mat4x3 tr_mat;
         get_tr_mat(tf->v, tr_mat);
+        mat4x3 ofst_mat;
+        Vec3 v2 = { .x = -0.5f, .y = -0.5f, .z = -0.5f};
+        get_tr_mat(&v2, ofst_mat);
         Vec3 v0 = { .x = 0.f, .y = 0.f, .z = params->translation_ofst};
         Vec3 v1 = { .x = 1.f, .y = 1.f, .z = 0.f };
         mat3x3 tmp_mat;
@@ -243,12 +281,41 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
 
             for (int i = 0; i < 3; i++) {
                 Vec3 *v = &tri.v[i];
+                mat4x3_Vec3_mul(ofst_mat, v, v);
                 mat3x3_Vec3_mul(world_mat, v, v);
                 // mat3x3_Vec3_mul(yaw_mat, v, v);
                 // mat3x3_Vec3_mul(pitch_mat, v, v);
                 // mat3x3_Vec3_mul(roll_mat, v, v);
                 mat4x3_Vec3_mul(tr_mat, v, v);
                 Vec3_add(v, &v0, v);
+                // mat4x4_Vec3_mul(proj_mat, v, v);
+                // {
+                //     Vec3_add(v, &v1, v);
+                //     v->x *= 0.5f * (float)termx;
+                //     v->y *= 0.5f * (float)termy;
+                // }
+            }
+
+            Vec3 normal;
+            {
+                Vec3 line1;
+                Vec3 line2;
+                Vec3_line(&tri.v[0], &tri.v[1], &line1);
+                Vec3_line(&tri.v[0], &tri.v[2], &line2);
+                Vec3_cross(&line1, &line2, &normal);
+                float l = 1 / Vec3_norm(&normal);
+                Vec3_scale(&normal, l, &normal);
+            }
+            {
+                Vec3 v;
+                Vec3_line(&camera, &tri.v[0], &v);
+
+                if (Vec3_dot(&v, &normal) >= 0.f)
+                    continue;
+            }
+
+            for (int i = 0; i < 3; i++) {
+                Vec3 *v = &tri.v[i];
                 mat4x4_Vec3_mul(proj_mat, v, v);
                 {
                     Vec3_add(v, &v1, v);
@@ -258,18 +325,6 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
             }
 
             // rasterization ...
-            // Vec2_Int va = { .x = (int)tri.v[0].x, .y = (int)tri.v[0].y };
-            // Vec2_Int vb = { .x = (int)tri.v[1].x, .y = (int)tri.v[1].y };
-            // Vec2_Int vc = { .x = (int)tri.v[2].x, .y = (int)tri.v[2].y };
-            // Line_Int l1 = { .a = &va, .b = &vb };
-            // Line_Int l2 = { .a = &vb, .b = &vc };
-            // Line_Int l3 = { .a = &vc, .b = &va };
-            // Raster r1 = { .l = &l1, .c = c, .shader = 12};
-            // Raster r2 = { .l = &l2, .c = c, .shader = 12};
-            // Raster r3 = { .l = &l3, .c = c, .shader = 12};
-            // drawlinevec(fb, &r1);
-            // drawlinevec(fb, &r2);
-            // drawlinevec(fb, &r3);
             int x1 = (int)tri.v[0].x;
             int y1 = (int)tri.v[0].y;
             int x2 = (int)tri.v[1].x;
@@ -286,7 +341,7 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         t.rendering += delta_time(&start, &end);
         clock_gettime(CLOCK_REALTIME, &start);
         #endif
-        draw(fb);
+        drawb(fb);
         // msleep(20);
         #ifdef PERFCOUNT
         clock_gettime(CLOCK_REALTIME, &end);

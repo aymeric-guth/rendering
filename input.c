@@ -41,14 +41,14 @@ void process_input(Transform_Vars *tf, int elmt)
         break;
 
     case KEY_S:
-        tf->v->z -= TR_STEP;
+        tf->alpha -= ROT_STEP;
         break;
 
     case KEY_D:
         break;
 
     case KEY_W:
-        tf->v->z += TR_STEP;
+        tf->alpha += ROT_STEP;
         break;
 
     case KEY_h:
@@ -56,15 +56,23 @@ void process_input(Transform_Vars *tf, int elmt)
         break;
 
     case KEY_j:
-        tf->v->y -= TR_STEP;
+        tf->v->y += TR_STEP;
         break;
 
     case KEY_k:
-        tf->v->y += TR_STEP;
+        tf->v->y -= TR_STEP;
         break;
 
     case KEY_l:
         tf->v->x += TR_STEP;
+        break;
+
+    case KEY_J:
+        tf->v->z += TR_STEP;
+        break;
+
+    case KEY_K:
+        tf->v->z -= TR_STEP;
         break;
     }
 }

@@ -126,3 +126,30 @@ void mat3x3_mul(mat3x3 mata, mat3x3 matb, mat3x3 mat)
     mat[2][1] = mata[2][0] * matb[0][1] + mata[2][1] * matb[1][1] + mata[2][2] * matb[2][1];
     mat[2][2] = mata[2][0] * matb[0][2] + mata[2][1] * matb[1][2] + mata[2][2] * matb[2][2];
 }
+
+float Vec3_dot(Vec3 *a, Vec3 *b)
+{
+    return a->x * b->x + a->y * b->y + a->z * b->z;
+}
+
+void Vec3_cross(Vec3 *a, Vec3 *b, Vec3 *o)
+{
+    o->x = a->y * b->z - a->z * b->y;
+    o->y = a->z * b->x - a->x * b->z;
+    o->z = a->x * b->y - a->y * b->x;
+}
+
+float Vec3_norm(Vec3 *v)
+{
+    float x = v->x;
+    float y = v->y;
+    float z = v->z;
+    return sqrtf(x * x + y * y + z * z);
+}
+
+void Vec3_line(Vec3 *i1, Vec3 *i2, Vec3 *o)
+{
+    o->x = i2->x - i1->x;
+    o->y = i2->y - i1->y;
+    o->z = i2->z - i1->z;
+}
