@@ -1,18 +1,19 @@
 #include <stdio.h>
-#include "input.h"
-#include "fifo.h"
-#include "constants.h"
-#include "utilz.h"
 
+#include "constants.h"
+#include "fifo.h"
+#include "input.h"
+
+extern int running;
 
 void *kb_input(void *arg)
 {
     Q *q = (Q *) arg;
 
-    while (1) {
+    while (running) {
         int c = getchar();
         Q_put(q, c);
-        msleep(20);
+        //msleep(20);
     }
 
     return NULL;

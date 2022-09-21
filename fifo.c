@@ -3,7 +3,6 @@
 
 #include "fifo.h"
 
-
 int Q_get(Q *q, int *retval)
 {
     if (q->tail == q->head)

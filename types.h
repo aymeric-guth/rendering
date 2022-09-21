@@ -1,10 +1,9 @@
-#include "matrix.h"
-#include "constants.h"
-#include "fifo.h"
-
 #ifndef TYPES_H
 #define TYPES_H
 
+#include "matrix.h"
+#include "constants.h"
+#include "fifo.h"
 
 static const char *color_map[] = {
     [COLOR_NONE] = "",
@@ -48,6 +47,7 @@ typedef struct {
     float viewing_distance;
     float translation_ofst;
     float theta; // FOV
+    Vec3 *camera;
 } Render_Params;
 
 typedef struct {
@@ -56,7 +56,16 @@ typedef struct {
     double rendering;
     double rasterizing;
     double drawing;
+    float fo;
     int it;
 } Telem;
+
+typedef struct {
+    int *q;
+    float **zbuff;
+    Pixel **framebuff;
+    Pixel **last;
+    Mesh *mesh;
+} Mem_Set;
 
 #endif

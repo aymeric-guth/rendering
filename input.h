@@ -1,8 +1,7 @@
-#include "types.h"
-#include "constants.h"
-
 #ifndef INPUT_H
 #define INPUT_H
+
+#include "types.h"
 
 typedef enum {
     KEY_a = 97,

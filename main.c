@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -13,173 +14,29 @@
 #include "fifo.h"
 #include "constants.h"
 #include "types.h"
-#include "utilz.h"
+//#include "utilz.h"
 #include "matrix.h"
 #include "input.h"
+#include "draw.h"
+#include "rasterizer.h"
 
 #include "scene_data.h"
 
-int TERMX = 0;
-int TERMY = 0;
+extern int TERMX;
+extern int TERMY;
+extern int running;
+
+Mem_Set mem;
 
 void get_term_size(Vec2 *v)
 {
     // runtime terminal size
     struct winsize w;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-    v->x = (float)w.ws_col / 2.f;
+    v->x = (float)w.ws_col * 0.5f;
     v->y = (float)w.ws_row;
     TERMX = (int) v->x;
     TERMY = (int) v->y;
-}
-
-void drawdebug(Telem *t)
-{
-    printf("\033[%d;%dH", TERMY - 1, TERMX - 1);
-    int it = t->it;
-    double fps = 1 / ((t->input + t->transform + t->rendering + t->drawing) / (double)it);
-    printf("FPS=%lf, IO=%lf, Transform=%lf, Rendering=%lf, Drawing=%lf", fps, t->input / it, t->transform / it, t->rendering / it, t->drawing / it);
-}
-
-void drawb(Pixel **framebuff)
-{
-    const size_t BUFFSIZE = TERMX * 10;
-    Pixel *px;
-    char *shader = " .,-~:;=!*#$@";
-    char buff[BUFFSIZE];
-
-    for (int j = 0; j < TERMY; j++) {
-        memset(buff, 0, BUFFSIZE);
-        char *c = buff;
-
-        for (int i = 0; i < TERMX; i++) {
-            px = &framebuff[j][i];
-
-            if (px->shader > 0 && px->color != COLOR_NONE) {
-                strcpy(c, color_map[px->color]);
-                c += 7;
-                strcpy(c++, &shader[px->shader]);
-                strcpy(c++, " ");
-            } else {
-                strcpy(c, "  ");
-                c += 2;
-            }
-
-            px->shader = 0;
-            px->color = COLOR_NONE;
-        }
-
-        // move cursor to line j + end color
-        printf("\033[%d;0H%s\x1b[0m\n", j, buff);
-        //msleep(10);
-    }
-}
-
-void draw(Pixel **framebuff)
-{
-    Pixel *px;
-    printf("\033[0;0H");
-    char *shader = " .,-~:;=!*#$@";
-    int last = 0;
-
-    for (int j = 0; j < TERMY; j++) {
-        for (int i = 0; i < TERMX; i++) {
-            px = &framebuff[j][i];
-
-            if (px->shader > 0)
-                printf("\033[%d;%dH%s%c \x1b[0m", j, i * 2, color_map[px->color], shader[px->shader]);
-            else
-                printf("\033[%d;%dH  ", j, i * 2);
-
-            px->shader = 0;
-            px->color = COLOR_NONE;
-            last = i;
-        }
-
-        printf("\033[%d;%dH", j, last * 2);
-        // msleep(10);
-    }
-}
-
-void drawfb(Pixel **fb, int x, int y, Color c, int shader)
-{
-    if (x < TERMX && x >= 0 && y < TERMY && y >= 0) {
-        fb[y][x].shader = shader;
-        fb[y][x].color = c;
-    }
-}
-
-void drawline(Pixel **fb, int x1, int y1, int x2, int y2, Color c, int shader)
-{
-    int x, y, dx, dy, dx1, dy1, px, py, xe, ye, i;
-    dx = x2 - x1;
-    dy = y2 - y1;
-    dx1 = abs(dx);
-    dy1 = abs(dy);
-    px = 2 * dy1 - dx1;
-    py = 2 * dx1 - dy1;
-
-    if (dy1 <= dx1) {
-        if (dx >= 0) {
-            x = x1;
-            y = y1;
-            xe = x2;
-        } else {
-            x = x2;
-            y = y2;
-            xe = x1;
-        }
-
-        drawfb(fb, x, y, c, shader);
-
-        for (i = 0; x < xe; i++) {
-            x++;
-
-            if (px < 0)
-                px = px + 2 * dy1;
-            else {
-                if ((dx < 0 && dy < 0) || (dx > 0 && dy > 0))
-                    y++;
-                else
-                    y--;
-
-                px = px + 2 * (dy1 - dx1);
-            }
-
-            drawfb(fb, x, y, c, shader);
-        }
-
-        return;
-    }
-
-    if (dy >= 0) {
-        x = x1;
-        y = y1;
-        ye = y2;
-    } else {
-        x = x2;
-        y = y2;
-        ye = y1;
-    }
-
-    drawfb(fb, x, y, c, shader);
-
-    for (i = 0; y < ye; i++) {
-        y++;
-
-        if (py <= 0)
-            py = py + 2 * dx1;
-        else {
-            if ((dx < 0 && dy < 0) || (dx > 0 && dy > 0))
-                x++;
-            else
-                x--;
-
-            py = py + 2 * (dx1 - dy1);
-        }
-
-        drawfb(fb, x, y, c, shader);
-    }
 }
 
 void get_proj_mat(Render_Params *params, mat4x4 mat)
@@ -220,52 +77,50 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
     Mesh *mesh = state->mesh;
     Pixel **fb = state->framebuff;
     Transform_Vars *tf = params->tf;
-    // clear screen
-    printf("\033[2J");
-    // hide cursor
-    printf("\e[?25l");
-    struct timespec start, end;
+    struct timespec start, end, frame_d;
     #ifdef PERFCOUNT
     Telem t = { .drawing = 0.f, .rendering = 0.f, .input = 0.f, .transform = 0.f, .it = 0};
     #endif
-    Vec3 camera = {0.f, 0.f, 0.f, 0.f};
+    Vec3 *camera = params->camera;
 
-    for (;;) {
+    while (running) {
+        //for (;;) {
         // for (int n = 0; n < CYCLES; n++) {
         #ifdef PERFCOUNT
         clock_gettime(CLOCK_REALTIME, &start);
+        frame_d.tv_nsec = start.tv_nsec;
+        frame_d.tv_sec = start.tv_sec;
         #endif
+        int termx, termy;
         get_term_size(params->term);
-        int termx = (int) params->term->x;
-        int termy = (int) params->term->y;
+        termx = (int) params->term->x;
+        termy = (int) params->term->y;
+        // process user-input events
         int elmt = 0;
 
         while (Q_get(q, &elmt) > 0)
             process_input(tf, elmt);
 
+        tf->alpha += PI / 1000;
+        tf->beta += PI / 2000;
+        tf->gamma += PI / 3000;
         #ifdef PERFCOUNT
         clock_gettime(CLOCK_REALTIME, &end);
         t.input += delta_time(&start, &end);
         clock_gettime(CLOCK_REALTIME, &start);
         #endif
+        mat3x3 yaw_mat, pitch_mat, roll_mat, tr_mat, ofst_mat, tmp_mat, world_mat;
         mat4x4 proj_mat;
-        get_proj_mat(params, proj_mat);
-        mat3x3 yaw_mat;
-        get_yaw_mat(tf->alpha, yaw_mat);
-        mat3x3 pitch_mat;
-        get_pitch_mat(tf->beta, pitch_mat);
-        mat3x3 roll_mat;
-        get_roll_mat(tf->gamma, roll_mat);
-        mat4x3 tr_mat;
-        get_tr_mat(tf->v, tr_mat);
-        mat4x3 ofst_mat;
-        Vec3 v2 = { .x = -0.5f, .y = -0.5f, .z = -0.5f};
-        get_tr_mat(&v2, ofst_mat);
         Vec3 v0 = { .x = 0.f, .y = 0.f, .z = params->translation_ofst};
         Vec3 v1 = { .x = 1.f, .y = 1.f, .z = 0.f };
-        mat3x3 tmp_mat;
+        Vec3 v2 = { .x = -0.5f, .y = -0.5f, .z = -0.5f};
+        get_proj_mat(params, proj_mat);
+        get_yaw_mat(tf->alpha, yaw_mat);
+        get_pitch_mat(tf->beta, pitch_mat);
+        get_roll_mat(tf->gamma, roll_mat);
+        get_tr_mat(tf->v, tr_mat);
+        get_tr_mat(&v2, ofst_mat);
         mat3x3_mul(yaw_mat, pitch_mat, tmp_mat);
-        mat3x3 world_mat;
         mat3x3_mul(roll_mat, tmp_mat, world_mat);
         #ifdef PERFCOUNT
         clock_gettime(CLOCK_REALTIME, &end);
@@ -281,34 +136,24 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
 
             for (int i = 0; i < 3; i++) {
                 Vec3 *v = &tri.v[i];
+                // hack pour forcer la rotation sur le centre de l'objet
                 mat4x3_Vec3_mul(ofst_mat, v, v);
+                // rotation
                 mat3x3_Vec3_mul(world_mat, v, v);
-                // mat3x3_Vec3_mul(yaw_mat, v, v);
-                // mat3x3_Vec3_mul(pitch_mat, v, v);
-                // mat3x3_Vec3_mul(roll_mat, v, v);
                 mat4x3_Vec3_mul(tr_mat, v, v);
+                // z-offset pour controler la distance écran - objet
                 Vec3_add(v, &v0, v);
-                // mat4x4_Vec3_mul(proj_mat, v, v);
-                // {
-                //     Vec3_add(v, &v1, v);
-                //     v->x *= 0.5f * (float)termx;
-                //     v->y *= 0.5f * (float)termy;
-                // }
             }
 
-            Vec3 normal;
             {
-                Vec3 line1;
-                Vec3 line2;
+                Vec3 normal, line1, line2, v;
+                float l;
                 Vec3_line(&tri.v[0], &tri.v[1], &line1);
                 Vec3_line(&tri.v[0], &tri.v[2], &line2);
                 Vec3_cross(&line1, &line2, &normal);
-                float l = 1 / Vec3_norm(&normal);
+                l = 1 / Vec3_norm(&normal);
                 Vec3_scale(&normal, l, &normal);
-            }
-            {
-                Vec3 v;
-                Vec3_line(&camera, &tri.v[0], &v);
+                Vec3_line(camera, &tri.v[0], &v);
 
                 if (Vec3_dot(&v, &normal) >= 0.f)
                     continue;
@@ -317,23 +162,27 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
             for (int i = 0; i < 3; i++) {
                 Vec3 *v = &tri.v[i];
                 mat4x4_Vec3_mul(proj_mat, v, v);
-                {
-                    Vec3_add(v, &v1, v);
-                    v->x *= 0.5f * (float)termx;
-                    v->y *= 0.5f * (float)termy;
-                }
+                // offset des coordonées dans [0., 1.]
+                Vec3_add(v, &v1, v);
+                Vec3_scale(v, 0.5f, v);
+                // scaling des coordonées
+                v->x *= (float)termx;
+                v->y *= (float)termy;
             }
 
-            // rasterization ...
-            int x1 = (int)tri.v[0].x;
-            int y1 = (int)tri.v[0].y;
-            int x2 = (int)tri.v[1].x;
-            int y2 = (int)tri.v[1].y;
-            int x3 = (int)tri.v[2].x;
-            int y3 = (int)tri.v[2].y;
-            drawline(fb, x1, y1, x2, y2, c, 12);
-            drawline(fb, x2, y2, x3, y3, c, 12);
-            drawline(fb, x3, y3, x1, y1, c, 12);
+            {
+                // rasterization ...
+                int x1, y1, x2, y2, x3, y3;
+                x1 = (int)tri.v[0].x;
+                y1 = (int)tri.v[0].y;
+                x2 = (int)tri.v[1].x;
+                y2 = (int)tri.v[1].y;
+                x3 = (int)tri.v[2].x;
+                y3 = (int)tri.v[2].y;
+                drawline(fb, x1, y1, x2, y2, c, 12);
+                drawline(fb, x2, y2, x3, y3, c, 12);
+                drawline(fb, x3, y3, x1, y1, c, 12);
+            }
         }
 
         #ifdef PERFCOUNT
@@ -341,76 +190,132 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         t.rendering += delta_time(&start, &end);
         clock_gettime(CLOCK_REALTIME, &start);
         #endif
-        drawb(fb);
-        // msleep(20);
+        draw(fb);
         #ifdef PERFCOUNT
         clock_gettime(CLOCK_REALTIME, &end);
         t.drawing += delta_time(&start, &end);
+        clock_gettime(CLOCK_REALTIME, &end);
+        float idle = FRAME_US - delta_time(&frame_d, &end) * 1000;
+        t.fo = idle;
         drawdebug(&t);
         t.it++;
+        //if (idle > 0)
+        //    msleep((long)idle);
         #endif
     }
 
     return 0;
 }
 
+int dealocator(Mem_Set *mem)
+{
+    if (mem->q)
+        free(mem->q);
+
+    if (mem->mesh)
+        free(mem->mesh);
+
+    if (mem->framebuff) {
+        for (int i = 0; i < TERMY; i++) {
+            if (mem->framebuff[i] != NULL)
+                free(mem->framebuff[i]);
+        }
+    }
+
+    if (mem->zbuff) {
+        for (int i = 0; i < TERMY; i++) {
+            if (mem->zbuff[i] != NULL)
+                free(mem->zbuff[i]);
+        }
+    }
+
+    return -1;
+}
+
+int allocator(Mem_Set *mem)
+{
+    mem->q = malloc(sizeof(int) * QUEUE_SIZE);
+
+    if (!mem->q)
+        return dealocator(mem);
+
+    mem->mesh = malloc(sizeof(Mesh) * SCENE_SIZE);
+
+    if (!mem->mesh)
+        return dealocator(mem);
+
+    memset(mem->mesh, 0, sizeof(Mesh) * SCENE_SIZE);
+    mem->mesh->s = SCENE_SIZE;
+
+    for (int i = 0; i < mem->mesh->s; i++) {
+        mem->mesh[i].t = &_scene[i];
+        mem->mesh[i].c = (void *)&_colors[i]->color;
+    }
+
+    mem->framebuff = malloc(sizeof(Pixel *) * TERMY);
+
+    if (!mem->framebuff)
+        return dealocator(mem);
+
+    mem->zbuff = malloc(sizeof(float *) * TERMY);
+
+    if (!mem->zbuff)
+        return dealocator(mem);
+
+    for (int j = 0; j < TERMY; j++) {
+        Pixel *pfb = (Pixel *) malloc(sizeof(Pixel) * TERMX);
+        memset(pfb, 0, sizeof(Pixel) * TERMX);
+        mem->framebuff[j] = pfb;
+        float *pzb = (float *) malloc(sizeof(float) * TERMX);
+        memset(pzb, 0, sizeof(float) * TERMX);
+        mem->zbuff[j] = pzb;
+    }
+
+    return 0;
+}
+
+void sig_handler(int signum)
+{
+    running = 0;
+}
+
 int main()
 {
+    running = 1;
+    signal(SIGINT, sig_handler);
     Vec2 term;
     get_term_size(&term);
     int termx = TERMX;
     int termy = TERMY;
 
     if (termx <= 0 || termy <= 0)
-        goto cleanup;
+        return -1;
 
+    // clear screen
+    printf("\033[2J");
+    // hide cursor
+    printf("\e[?25l");
     // tty raw mode, non buffered io
     struct termios mode;
     tcgetattr(0, &mode);
     mode.c_lflag &= ~(ECHO | ICANON);
     tcsetattr(0, TCSANOW, &mode);
+
+    if (allocator(&mem))
+        dealocator(&mem);
+
     // io thread init
     pthread_t _kb_input;
-    void *qp = malloc(sizeof(void *) * QUEUE_SIZE);
-
-    if (!qp)
-        goto cleanup;
-
-    Q q = { .head = 0, .tail = 0, .size = QUEUE_SIZE, .data = qp};
+    Q q = { .head = 0, .tail = 0, .size = QUEUE_SIZE, .data = mem.q};
     pthread_create(&_kb_input, NULL, kb_input, &q);
-    // world init
-    Mesh *m = malloc(sizeof(Mesh) * SCENE_SIZE);
-
-    if (!m)
-        goto cleanup;
-
-    memset(m, 0, sizeof(Mesh) * SCENE_SIZE);
-    m->s = SCENE_SIZE;
-
-    for (int i = 0; i < m->s; i++) {
-        m[i].t = &_scene[i];
-        m[i].c = (void *)&_colors[i]->color;
-    }
-
-    Pixel **framebuff = (Pixel **)malloc(sizeof(Pixel *) * termy);
-    float **zbuff = (float **)malloc(sizeof(float *) * termy);
-
-    for (int j = 0; j < termy; j++) {
-        Pixel *pfb = (Pixel *) malloc(sizeof(Pixel) * termx);
-        memset(pfb, 0, sizeof(Pixel) * termx);
-        framebuff[j] = pfb;
-        float *pzb = (float *) malloc(sizeof(float) * termx);
-        memset(pzb, 0, sizeof(float) * termx);
-        zbuff[j] = pzb;
-    }
-
+    Vec3 ofst = {.x = 0.f, .y = 0.f, .z = 0.f};
+    Vec3 camera = {0.f, 0.f, 0.f, 0.f};
     Game_State state = {
         .q = &q,
-        .zbuff = zbuff,
-        .framebuff = framebuff,
-        .mesh = m,
+        .zbuff = mem.zbuff,
+        .framebuff = mem.framebuff,
+        .mesh = mem.mesh,
     };
-    Vec3 ofst = {.x = 0.f, .y = 0.f, .z = 0.f};
     Transform_Vars tf = {
         .alpha = 0.f,
         .beta = 0.f,
@@ -421,40 +326,14 @@ int main()
         .tf = &tf,
         .term = &term,
         .focal_distance = 10.f,
-        .translation_ofst = 2.f,
-        .viewing_distance = 100.f,
-        .theta = PI * 0.5f
+        .translation_ofst = 1.f,
+        .viewing_distance = 1000.f,
+        .theta = PI * 0.5f,
+        .camera = &camera
     };
     entrypoint_tri(&state, &params);
-    goto cleanup;
-cleanup:
-
-    if (qp)
-        free(qp);
-
-    if (m)
-        free(m);
-
-    if (framebuff) {
-        while (1) {
-            if (*framebuff) {
-                free(*framebuff);
-                framebuff++;
-            } else
-                break;
-        }
-    }
-
-    if (zbuff) {
-        while (1) {
-            if (*zbuff) {
-                free(*zbuff);
-                zbuff++;
-            } else
-                break;
-        }
-    }
-
+    dealocator(&mem);
+    printf("successfully dealocated memory, exiting...\n");
     // show cursor
     printf("\e[?25h");
     return 0;

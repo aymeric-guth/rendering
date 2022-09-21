@@ -1,4 +1,5 @@
 #include <math.h>
+
 #include "matrix.h"
 
 void Vec3_add(Vec3 *i1, Vec3 *i2, Vec3 *o)
