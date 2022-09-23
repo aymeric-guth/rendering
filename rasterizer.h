@@ -11,9 +11,9 @@
 #define SWAP(x,y) do { (x)=(x)^(y); (y)=(x)^(y); (x)=(x)^(y); } while(0)
 
 void set_pixel(uint8_t, uint8_t);
-void lcd_hline(uint8_t, uint8_t, uint8_t);
 void drawline(Pixel **, int, int, int, int, Color, int);
-void fillTriangleslope(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t);
-void fillTriangle(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t);
+void fillTriangleslope(Pixel **fb, int x0, int y0, int x1, int y1, int x2, int y2, int color);
+void lcd_hline(Pixel **fb, int x1, int x2, int y);
+void fillTriangle(Pixel **fb, Tri *tri);
 
 #endif

@@ -14,7 +14,6 @@
 #include "fifo.h"
 #include "constants.h"
 #include "types.h"
-//#include "utilz.h"
 #include "matrix.h"
 #include "input.h"
 #include "draw.h"
@@ -25,8 +24,6 @@
 extern int TERMX;
 extern int TERMY;
 extern int running;
-
-Mem_Set mem;
 
 void get_term_size(Vec2 *v)
 {
@@ -101,9 +98,9 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         while (Q_get(q, &elmt) > 0)
             process_input(tf, elmt);
 
-        tf->alpha += PI / 1000;
-        tf->beta += PI / 2000;
-        tf->gamma += PI / 3000;
+        //tf->alpha += PI / 1000;
+        //tf->beta += PI / 2000;
+        //tf->gamma += PI / 3000;
         #ifdef PERFCOUNT
         clock_gettime(CLOCK_REALTIME, &end);
         t.input += delta_time(&start, &end);
@@ -172,16 +169,11 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
 
             {
                 // rasterization ...
-                int x1, y1, x2, y2, x3, y3;
-                x1 = (int)tri.v[0].x;
-                y1 = (int)tri.v[0].y;
-                x2 = (int)tri.v[1].x;
-                y2 = (int)tri.v[1].y;
-                x3 = (int)tri.v[2].x;
-                y3 = (int)tri.v[2].y;
-                drawline(fb, x1, y1, x2, y2, c, 12);
-                drawline(fb, x2, y2, x3, y3, c, 12);
-                drawline(fb, x3, y3, x1, y1, c, 12);
+                fillTriangle(fb, &tri);
+                //fillTriangleslope(fb, x1, y1, x2, y2, x3, y3, c);
+                //drawline(fb, x1, y1, x2, y2, c, 12);
+                //drawline(fb, x2, y2, x3, y3, c, 12);
+                //drawline(fb, x3, y3, x1, y1, c, 12);
             }
         }
 
@@ -202,73 +194,6 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         //if (idle > 0)
         //    msleep((long)idle);
         #endif
-    }
-
-    return 0;
-}
-
-int dealocator(Mem_Set *mem)
-{
-    if (mem->q)
-        free(mem->q);
-
-    if (mem->mesh)
-        free(mem->mesh);
-
-    if (mem->framebuff) {
-        for (int i = 0; i < TERMY; i++) {
-            if (mem->framebuff[i] != NULL)
-                free(mem->framebuff[i]);
-        }
-    }
-
-    if (mem->zbuff) {
-        for (int i = 0; i < TERMY; i++) {
-            if (mem->zbuff[i] != NULL)
-                free(mem->zbuff[i]);
-        }
-    }
-
-    return -1;
-}
-
-int allocator(Mem_Set *mem)
-{
-    mem->q = malloc(sizeof(int) * QUEUE_SIZE);
-
-    if (!mem->q)
-        return dealocator(mem);
-
-    mem->mesh = malloc(sizeof(Mesh) * SCENE_SIZE);
-
-    if (!mem->mesh)
-        return dealocator(mem);
-
-    memset(mem->mesh, 0, sizeof(Mesh) * SCENE_SIZE);
-    mem->mesh->s = SCENE_SIZE;
-
-    for (int i = 0; i < mem->mesh->s; i++) {
-        mem->mesh[i].t = &_scene[i];
-        mem->mesh[i].c = (void *)&_colors[i]->color;
-    }
-
-    mem->framebuff = malloc(sizeof(Pixel *) * TERMY);
-
-    if (!mem->framebuff)
-        return dealocator(mem);
-
-    mem->zbuff = malloc(sizeof(float *) * TERMY);
-
-    if (!mem->zbuff)
-        return dealocator(mem);
-
-    for (int j = 0; j < TERMY; j++) {
-        Pixel *pfb = (Pixel *) malloc(sizeof(Pixel) * TERMX);
-        memset(pfb, 0, sizeof(Pixel) * TERMX);
-        mem->framebuff[j] = pfb;
-        float *pzb = (float *) malloc(sizeof(float) * TERMX);
-        memset(pzb, 0, sizeof(float) * TERMX);
-        mem->zbuff[j] = pzb;
     }
 
     return 0;
@@ -300,21 +225,54 @@ int main()
     tcgetattr(0, &mode);
     mode.c_lflag &= ~(ECHO | ICANON);
     tcsetattr(0, TCSANOW, &mode);
+    int *qp = malloc(sizeof(int) * QUEUE_SIZE);
 
-    if (allocator(&mem))
-        dealocator(&mem);
+    if (!qp)
+        goto cleanup;
+
+    Mesh *mesh = malloc(sizeof(Mesh) * SCENE_SIZE);
+
+    if (!mesh)
+        goto cleanup;
+
+    memset(mesh, 0, sizeof(Mesh) * SCENE_SIZE);
+    mesh->s = SCENE_SIZE;
+
+    for (int i = 0; i < mesh->s; i++) {
+        mesh[i].t = &_scene[i];
+        mesh[i].c = (void *)&_colors[i]->color;
+    }
+
+    Pixel **framebuff = malloc(sizeof(Pixel *) * TERMY);
+
+    if (!framebuff)
+        goto cleanup;
+
+    float **zbuff = malloc(sizeof(float *) * TERMY);
+
+    if (!zbuff)
+        goto cleanup;
+
+    for (int j = 0; j < TERMY; j++) {
+        Pixel *pfb = malloc(sizeof(Pixel) * TERMX);
+        memset(pfb, 0, sizeof(Pixel) * TERMX);
+        framebuff[j] = pfb;
+        float *pzb = malloc(sizeof(float) * TERMX);
+        memset(pzb, 0, sizeof(float) * TERMX);
+        zbuff[j] = pzb;
+    }
 
     // io thread init
     pthread_t _kb_input;
-    Q q = { .head = 0, .tail = 0, .size = QUEUE_SIZE, .data = mem.q};
+    Q q = { .head = 0, .tail = 0, .size = QUEUE_SIZE, .data = qp};
     pthread_create(&_kb_input, NULL, kb_input, &q);
     Vec3 ofst = {.x = 0.f, .y = 0.f, .z = 0.f};
     Vec3 camera = {0.f, 0.f, 0.f, 0.f};
     Game_State state = {
         .q = &q,
-        .zbuff = mem.zbuff,
-        .framebuff = mem.framebuff,
-        .mesh = mem.mesh,
+        .zbuff = zbuff,
+        .framebuff = framebuff,
+        .mesh = mesh,
     };
     Transform_Vars tf = {
         .alpha = 0.f,
@@ -332,8 +290,29 @@ int main()
         .camera = &camera
     };
     entrypoint_tri(&state, &params);
-    dealocator(&mem);
-    printf("successfully dealocated memory, exiting...\n");
+    goto cleanup;
+cleanup:
+
+    if (qp)
+        free(qp);
+
+    if (mesh)
+        free(mesh);
+
+    if (framebuff) {
+        for (int i = 0; i < TERMY; i++) {
+            if (framebuff[i] != NULL)
+                free(framebuff[i]);
+        }
+    }
+
+    if (zbuff) {
+        for (int i = 0; i < TERMY; i++) {
+            if (zbuff[i] != NULL)
+                free(zbuff[i]);
+        }
+    }
+
     // show cursor
     printf("\e[?25h");
     return 0;

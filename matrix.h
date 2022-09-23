@@ -27,6 +27,7 @@ typedef struct {
 
 typedef struct {
     Vec3 v[3];
+    int c;
 } Tri;
 
 typedef struct {
@@ -38,6 +39,8 @@ typedef struct {
 typedef float mat4x4[4][4];
 typedef float mat4x3[4][3];
 typedef float mat3x3[3][3];
+
+float Vec2_cross(Vec2 *a, Vec2 *b);
 
 void Vec3_add(Vec3 *, Vec3 *, Vec3 *);
 void Vec3_mul(Vec3 *, Vec3 *, Vec3 *);

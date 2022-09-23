@@ -31,7 +31,8 @@ void draw(Pixel **framebuff)
             if (px->shader > 0 && px->color != COLOR_NONE) {
                 copyinto(&c, color_map[px->color]);
                 copyinto(&c, &shader[px->shader]);
-                copyinto(&c, " ");
+                copyinto(&c, &shader[px->shader]);
+                // copyinto(&c, " ");
             } else
                 copyinto(&c, "  ");
 

@@ -133,6 +133,11 @@ float Vec3_dot(Vec3 *a, Vec3 *b)
     return a->x * b->x + a->y * b->y + a->z * b->z;
 }
 
+float Vec2_cross(Vec2 *a, Vec2 *b)
+{
+    return a->x * b->y - a->y * b->x;
+}
+
 void Vec3_cross(Vec3 *a, Vec3 *b, Vec3 *o)
 {
     o->x = a->y * b->z - a->z * b->y;
