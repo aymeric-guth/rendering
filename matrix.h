@@ -28,6 +28,7 @@ typedef struct {
 typedef struct {
     Vec3 v[3];
     int c;
+    int s;
 } Tri;
 
 typedef struct {

@@ -18,6 +18,7 @@
 #include "input.h"
 #include "draw.h"
 #include "rasterizer.h"
+#include "utilz.h"
 
 #include "scene_data.h"
 
@@ -98,9 +99,9 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         while (Q_get(q, &elmt) > 0)
             process_input(tf, elmt);
 
-        //tf->alpha += PI / 1000;
-        //tf->beta += PI / 2000;
-        //tf->gamma += PI / 3000;
+        //tf->alpha += PI / 100;
+        //tf->beta += PI / 200;
+        //tf->gamma += PI / 300;
         #ifdef PERFCOUNT
         clock_gettime(CLOCK_REALTIME, &end);
         t.input += delta_time(&start, &end);
@@ -129,7 +130,6 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
 
         for (int j = 0; j < mesh->s; j++) {
             Tri tri = *mesh[j].t;
-            Color c = * (Color *)mesh[j].c;
 
             for (int i = 0; i < 3; i++) {
                 Vec3 *v = &tri.v[i];
@@ -168,12 +168,19 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
             }
 
             {
+                // luminescence
+                int shader = 12;
+                tri.s = shader;
+            }
+
+            {
                 // rasterization ...
                 fillTriangle(fb, &tri);
-                //fillTriangleslope(fb, x1, y1, x2, y2, x3, y3, c);
-                //drawline(fb, x1, y1, x2, y2, c, 12);
-                //drawline(fb, x2, y2, x3, y3, c, 12);
-                //drawline(fb, x3, y3, x1, y1, c, 12);
+                int shader = 12;
+                int color = COLOR_WHITE;
+                drawline(fb, tri.v[0].x, tri.v[0].y, tri.v[1].x, tri.v[1].y, color, shader);
+                drawline(fb, tri.v[1].x, tri.v[1].y, tri.v[2].x, tri.v[2].y, color, shader);
+                drawline(fb, tri.v[2].x, tri.v[2].y, tri.v[1].x, tri.v[1].y, color, shader);
             }
         }
 
@@ -191,8 +198,10 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         t.fo = idle;
         drawdebug(&t);
         t.it++;
-        //if (idle > 0)
-        //    msleep((long)idle);
+
+        if (idle > 0)
+            msleep((long)idle);
+
         #endif
     }
 
@@ -238,10 +247,8 @@ int main()
     memset(mesh, 0, sizeof(Mesh) * SCENE_SIZE);
     mesh->s = SCENE_SIZE;
 
-    for (int i = 0; i < mesh->s; i++) {
+    for (int i = 0; i < mesh->s; i++)
         mesh[i].t = &_scene[i];
-        mesh[i].c = (void *)&_colors[i]->color;
-    }
 
     Pixel **framebuff = malloc(sizeof(Pixel *) * TERMY);
 

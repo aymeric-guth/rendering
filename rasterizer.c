@@ -99,14 +99,13 @@ float crossProduct(Vec3 *v1, Vec3 *v2)
 // http://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html
 void fillTriangle(Pixel **fb, Tri *tri)
 {
-    int x1, y1, x2, y2, x3, y3, c;
+    int x1, y1, x2, y2, x3, y3;
     x1 = tri->v[0].x;
     y1 = tri->v[0].y;
     x2 = tri->v[1].x;
     y2 = tri->v[1].y;
     x3 = tri->v[2].x;
     y3 = tri->v[2].y;
-    c = tri->c;
     /* get the bounding box of the triangle */
     int maxX = MAX(x1, MAX(x2, x3));
     int minX = MIN(x1, MIN(x2, x3));
@@ -123,7 +122,7 @@ void fillTriangle(Pixel **fb, Tri *tri)
             float t = crossProduct(&vs1, &q) / crossProduct(&vs1, &vs2);
 
             if ((s >= 0) && (t >= 0) && (s + t <= 1))
-                drawfb(fb, x, y, c, 12);
+                drawfb(fb, x, y, tri->c, tri->s);
         }
     }
 }

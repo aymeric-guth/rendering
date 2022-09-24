@@ -30,9 +30,8 @@ void draw(Pixel **framebuff)
 
             if (px->shader > 0 && px->color != COLOR_NONE) {
                 copyinto(&c, color_map[px->color]);
-                copyinto(&c, &shader[px->shader]);
-                copyinto(&c, &shader[px->shader]);
-                // copyinto(&c, " ");
+                const char s[3] = {shader[px->shader], shader[px->shader], 0};
+                copyinto(&c, s);
             } else
                 copyinto(&c, "  ");
 
