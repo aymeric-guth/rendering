@@ -80,7 +80,6 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
     Telem t = { .drawing = 0.f, .rendering = 0.f, .input = 0.f, .transform = 0.f, .it = 0};
     #endif
     Vec3 camera = {0.f, 0.f, 0.f, 0.f};
-    size_t map_size = strlen(shader_map);
 
     while (running) {
         //for (;;) {
@@ -158,17 +157,17 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
                 if (Vec3_dot(&v, &normal) >= 0.f)
                     continue;
 
-                {
-                    // illumination
-                    Vec3 light_direction;
-                    Vec3_cpy(&camera, &light_direction);
-                    light_direction.z = -1.f;
-                    float ool = 1 / Vec3_norm(&light_direction);
-                    Vec3_scale(&light_direction, ool, &light_direction);
-                    float dp = Vec3_dot(&light_direction, &normal);
-                    tri.s = (int)((map_size - 1) * dp);
-                    tri.c = COLOR_WHITE;
-                }
+                //{
+                //    // illumination
+                //    Vec3 light_direction;
+                //    Vec3_cpy(&camera, &light_direction);
+                //    light_direction.z = -1.f;
+                //    float ool = 1 / Vec3_norm(&light_direction);
+                //    Vec3_scale(&light_direction, ool, &light_direction);
+                //    float dp = Vec3_dot(&light_direction, &normal);
+                //    tri.s = (int)((map_size - 1) * dp);
+                //    tri.c = COLOR_WHITE;
+                //}
             }
 
             // 2d projection
@@ -190,6 +189,9 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
                 #ifndef WIREFRAME
                 fillTriangle(fb, &tp);
                 #else
+                //drawfb(fb, (int)tp.v[0].x, (int)tp.v[0].y, tp.c, tp.s);
+                //drawfb(fb, (int)tp.v[1].x, (int)tp.v[1].y, tp.c, tp.s);
+                //drawfb(fb, (int)tp.v[2].x, (int)tp.v[2].y, tp.c, tp.s);
                 int shader = strlen(shader_map) - 1;
                 drawline(fb, tp.v[0].x, tp.v[0].y, tp.v[1].x, tp.v[1].y, tp.c, shader);
                 drawline(fb, tp.v[1].x, tp.v[1].y, tp.v[2].x, tp.v[2].y, tp.c, shader);
@@ -302,7 +304,7 @@ int main()
         .tf = &tf,
         .term = &term,
         .focal_distance = 10.f,
-        .translation_ofst = 10.f,
+        .translation_ofst = 2.f,
         .viewing_distance = 1000.f,
         .theta = PI * 0.5f,
     };
