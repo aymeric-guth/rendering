@@ -19,7 +19,6 @@ void draw(Pixel **framebuff)
     const size_t BUFFSIZE = TERMX * 10;
     Pixel *px;
     char buff[BUFFSIZE];
-    size_t map_size = strlen(shader_map);
 
     for (int j = 0; j < TERMY; j++) {
         memset(buff, 0, BUFFSIZE);
@@ -29,7 +28,9 @@ void draw(Pixel **framebuff)
             px = &framebuff[j][i];
 
             if (px->shader > 0 && px->color != COLOR_NONE) {
+                #ifdef HASCOLOR
                 copyinto(&c, color_map[px->color]);
+                #endif
                 const char *sym = &shader_map[px->shader];
                 const char s[3] = {*sym, *sym, 0};
                 copyinto(&c, s);
@@ -41,7 +42,11 @@ void draw(Pixel **framebuff)
         }
 
         // move cursor to line j + end color
+        #ifdef HASCOLOR
         printf("\033[%d;0H%s\x1b[0m\n", j, buff);
+        #else
+        printf("\033[%d;0H%s\n", j, buff);
+        #endif
         //msleep(10);
     }
 }

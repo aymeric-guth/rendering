@@ -135,6 +135,29 @@ void get_scale_mat(Vec3 *v, mat3x3 mat)
     mat[2][2] = v->z;
 }
 
+void get_proj_mat(mat4x4 mat, int termx, int termy, float theta, float viewing_distance, float focal_distance)
+{
+    // rectilinear projection
+    float a = (float)termy / (float)termx;
+    float fov = 1 / tanf(theta * 0.5f);
+    float q = viewing_distance / (viewing_distance - focal_distance);
+    mat[0][0] = a * fov;
+    mat[1][0] = 0.f;
+    mat[2][0] = 0.f;
+    mat[3][0] = 0.f;
+    mat[0][1] = 0.f;
+    mat[1][1] = fov;
+    mat[2][1] = 0.f;
+    mat[3][1] = 0.f;
+    mat[0][2] = 0.f;
+    mat[1][2] = 0.f;
+    mat[2][2] = q;
+    mat[3][2] = -focal_distance * q;
+    mat[0][3] = 0.f;
+    mat[1][3] = 0.f;
+    mat[2][3] = 1.f;
+    mat[3][3] = 0.f;
+}
 void mat3x3_mul(mat3x3 mata, mat3x3 matb, mat3x3 mat)
 {
     mat[0][0] = mata[0][0] * matb[0][0] + mata[0][1] * matb[1][0] + mata[0][2] * matb[2][0];

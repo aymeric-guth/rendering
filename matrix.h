@@ -63,6 +63,7 @@ void get_pitch_mat(float, mat3x3);
 void get_roll_mat(float, mat3x3);
 void get_tr_mat(Vec3 *, mat3x3);
 void get_scale_mat(Vec3 *v, mat3x3 mat);
+void get_proj_mat(mat4x4 mat, int termx, int termy, float theta, float viewing_distance, float focal_distance);
 
 void mat3x3_mul(mat3x3, mat3x3, mat3x3);
 

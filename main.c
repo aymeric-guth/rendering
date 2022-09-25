@@ -37,32 +37,6 @@ void get_term_size(Vec2 *v)
     TERMY = (int) v->y;
 }
 
-void get_proj_mat(Render_Params *params, mat4x4 mat)
-{
-    // rectilinear projection
-    float a = (float)params->term->y / (float)params->term->x;
-    float fov = 1 / tanf(params->theta * 0.5f);
-    float viewing_distance = params->viewing_distance;
-    float focal_distance = params->focal_distance;
-    float q = viewing_distance / (viewing_distance - focal_distance);
-    mat[0][0] = a * fov;
-    mat[1][0] = 0.f;
-    mat[2][0] = 0.f;
-    mat[3][0] = 0.f;
-    mat[0][1] = 0.f;
-    mat[1][1] = fov;
-    mat[2][1] = 0.f;
-    mat[3][1] = 0.f;
-    mat[0][2] = 0.f;
-    mat[1][2] = 0.f;
-    mat[2][2] = q;
-    mat[3][2] = -focal_distance * q;
-    mat[0][3] = 0.f;
-    mat[1][3] = 0.f;
-    mat[2][3] = 1.f;
-    mat[3][3] = 0.f;
-}
-
 double delta_time(struct timespec *start, struct timespec *end)
 {
     return (end->tv_sec - start->tv_sec) + (end->tv_nsec - start->tv_nsec) / 1000000000.f;
@@ -100,9 +74,9 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         while (Q_get(q, &elmt) > 0)
             process_input(tf, elmt);
 
-        //tf->alpha += PI / 100;
-        //tf->beta += PI / 200;
-        //tf->gamma += PI / 300;
+        tf->alpha += PI / 1000;
+        tf->beta += PI / 2000;
+        tf->gamma += PI / 3000;
         #ifdef PERFCOUNT
         clock_gettime(CLOCK_REALTIME, &end);
         t.input += delta_time(&start, &end);
@@ -112,16 +86,21 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         mat4x4 proj_mat;
         Vec3 v0 = { .x = 0.f, .y = 0.f, .z = params->translation_ofst};
         Vec3 v1 = { .x = 1.f, .y = 1.f, .z = 0.f };
-        //Vec3 v2 = { .x = -0.5f, .y = -0.5f, .z = -0.5f};
-        Vec3 v2 = { .x = 0.f, .y = 0.f, .z = 0.f};
-        Vec3 scale_v = { .x = (float)termx, .y = (float)termy, .z = 0.f};
-        get_proj_mat(params, proj_mat);
+        get_proj_mat(proj_mat, termx, termy, params->theta, params->viewing_distance, params->focal_distance);
         get_yaw_mat(tf->alpha, yaw_mat);
         get_pitch_mat(tf->beta, pitch_mat);
         get_roll_mat(tf->gamma, roll_mat);
         get_tr_mat(tf->v, tr_mat);
-        get_tr_mat(&v2, ofst_mat);
-        get_scale_mat(&scale_v, scale_mat);
+        {
+            // offset object center
+            // Vec3 v2 = { .x = -0.5f, .y = -0.5f, .z = -0.5f};
+            Vec3 v2 = { .x = 0.f, .y = 0.f, .z = 0.f};
+            get_tr_mat(&v2, ofst_mat);
+        }
+        {
+            Vec3 scale_v = { .x = (float)termx, .y = (float)termy, .z = 0.f};
+            get_scale_mat(&scale_v, scale_mat);
+        }
         mat3x3_mul(yaw_mat, pitch_mat, tmp_mat);
         mat3x3_mul(roll_mat, tmp_mat, world_mat);
         #ifdef PERFCOUNT
@@ -147,18 +126,22 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
             }
 
             {
-                Vec3 normal, line1, line2, v;
+                Vec3 normal, line1, line2, vn1, vn2, vn3;
                 float l;
                 Vec3_line(&tri.v[0], &tri.v[1], &line1);
                 Vec3_line(&tri.v[0], &tri.v[2], &line2);
                 Vec3_cross(&line1, &line2, &normal);
                 l = 1 / Vec3_norm(&normal);
                 Vec3_scale(&normal, l, &normal);
-                Vec3_line(&camera, &tri.v[0], &v);
+                Vec3_line(&camera, &tri.v[0], &vn1);
+                Vec3_line(&camera, &tri.v[1], &vn2);
+                Vec3_line(&camera, &tri.v[2], &vn3);
+                #ifndef WIREFRAME
 
-                if (Vec3_dot(&v, &normal) >= 0.f)
+                if (Vec3_dot(&vn1, &normal) >= 0.f && Vec3_dot(&vn2, &normal) >= 0.f && Vec3_dot(&vn3, &normal) >= 0.f)
                     continue;
 
+                #endif
                 {
                     // illumination
                     Vec3 light_direction;
@@ -168,11 +151,11 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
                     Vec3_scale(&light_direction, ool, &light_direction);
                     float dp = Vec3_dot(&light_direction, &normal);
                     tri.s = (int)((map_size - 1) * dp);
-                    tri.c = COLOR_WHITE;
+                    // tri.c = COLOR_WHITE;
                 }
             }
 
-            // 2d projection
+            // 2D projection
             Tri tp;
             memcpy(&tp, &tri, sizeof(Tri));
 
@@ -187,13 +170,10 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
             }
 
             {
-                // rasterization ...
+                // rasterization
                 #ifndef WIREFRAME
                 fillTriangle(fb, &tp);
                 #else
-                //drawfb(fb, (int)tp.v[0].x, (int)tp.v[0].y, tp.c, tp.s);
-                //drawfb(fb, (int)tp.v[1].x, (int)tp.v[1].y, tp.c, tp.s);
-                //drawfb(fb, (int)tp.v[2].x, (int)tp.v[2].y, tp.c, tp.s);
                 int shader = strlen(shader_map) - 1;
                 drawline(fb, tp.v[0].x, tp.v[0].y, tp.v[1].x, tp.v[1].y, tp.c, shader);
                 drawline(fb, tp.v[1].x, tp.v[1].y, tp.v[2].x, tp.v[2].y, tp.c, shader);
@@ -207,6 +187,7 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         t.rendering += delta_time(&start, &end);
         clock_gettime(CLOCK_REALTIME, &start);
         #endif
+        // draw framebuffer to screen
         draw(fb);
         #ifdef PERFCOUNT
         clock_gettime(CLOCK_REALTIME, &end);

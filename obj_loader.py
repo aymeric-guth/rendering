@@ -32,23 +32,32 @@ class Tri:
 with open(OBJ_FILE, "r") as f:
     raw = f.read().split("\n")
 for i in raw:
-    if not i:
-        break
-    if i[:2] == "vn" or i[:2] == "vt" or i[0] == "#" or i[0] == "s":
+    if not i or i[:2] == "vn" or i[:2] == "vt" or i[0] == "#" or i[0] == "s":
         continue
     if i[0] == "v":
         x, y, z = map(lambda x: float(x), i[2:].split(" "))
         vertices.append((x, y, z))
     elif i[0] == "f":
         (a, b, c) = i[2:].split(" ")
-        a = int(a.split("/")[0])
-        b = int(b.split("/")[0])
-        c = int(c.split("/")[0])
+        if "/" in a:
+            a = int(a.split("/")[0])
+        else:
+            a = int(a)
+        if "/" in b:
+            b = int(b.split("/")[0])
+        else:
+            b = int(b)
+        if "/" in c:
+            c = int(c.split("/")[0])
+        else:
+            c = int(c)
         triangles.append((vertices[a], vertices[b], vertices[c]))
-        # print(f"{a=}, {b=}, {c=}\n{vertices[a]=}, {vertices[b]=}, {vertices[c]=}")
+        print(f"{a=}, {b=}, {c=}\n{vertices[a]=}, {vertices[b]=}, {vertices[c]=}")
     else:
         ...
 
+if not len(triangles):
+    raise Exception
 
 p = pathlib.Path(__file__).parent
 indent = "    "
