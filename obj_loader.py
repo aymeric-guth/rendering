@@ -32,7 +32,9 @@ class Tri:
 with open(OBJ_FILE, "r") as f:
     raw = f.read().split("\n")
 for i in raw:
-    if not i or i[:2] == "vn" or i[:2] == "vt" or i[0] == "#" or i[0] == "s":
+    if not i:
+        break
+    if i[:2] == "vn" or i[:2] == "vt" or i[0] == "#" or i[0] == "s":
         continue
     if i[0] == "v":
         x, y, z = map(lambda x: float(x), i[2:].split(" "))
