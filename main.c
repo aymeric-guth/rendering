@@ -80,6 +80,7 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
     Telem t = { .drawing = 0.f, .rendering = 0.f, .input = 0.f, .transform = 0.f, .it = 0};
     #endif
     Vec3 camera = {0.f, 0.f, 0.f, 0.f};
+    size_t map_size = strlen(shader_map);
 
     while (running) {
         //for (;;) {
@@ -158,17 +159,17 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
                 if (Vec3_dot(&v, &normal) >= 0.f)
                     continue;
 
-                //{
-                //    // illumination
-                //    Vec3 light_direction;
-                //    Vec3_cpy(&camera, &light_direction);
-                //    light_direction.z = -1.f;
-                //    float ool = 1 / Vec3_norm(&light_direction);
-                //    Vec3_scale(&light_direction, ool, &light_direction);
-                //    float dp = Vec3_dot(&light_direction, &normal);
-                //    tri.s = (int)((map_size - 1) * dp);
-                //    tri.c = COLOR_WHITE;
-                //}
+                {
+                    // illumination
+                    Vec3 light_direction;
+                    Vec3_cpy(&camera, &light_direction);
+                    light_direction.z = -1.f;
+                    float ool = 1 / Vec3_norm(&light_direction);
+                    Vec3_scale(&light_direction, ool, &light_direction);
+                    float dp = Vec3_dot(&light_direction, &normal);
+                    tri.s = (int)((map_size - 1) * dp);
+                    tri.c = COLOR_WHITE;
+                }
             }
 
             // 2d projection
