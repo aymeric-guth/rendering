@@ -38,11 +38,12 @@ for i in raw:
         x, y, z = map(lambda x: float(x), i[2:].split(" "))
         vertices.append((x, y, z))
     elif i[0] == "f":
-        _, a, b, c = i.split(" ")
+        (a, b, c) = i[2:].split(" ")
         a = int(a.split("/")[0])
-        b = int(c.split("/")[0])
+        b = int(b.split("/")[0])
         c = int(c.split("/")[0])
         triangles.append((vertices[a], vertices[b], vertices[c]))
+        # print(f"{a=}, {b=}, {c=}\n{vertices[a]=}, {vertices[b]=}, {vertices[c]=}")
     else:
         ...
 
