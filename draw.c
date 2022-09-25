@@ -18,8 +18,8 @@ void draw(Pixel **framebuff)
 {
     const size_t BUFFSIZE = TERMX * 10;
     Pixel *px;
-    char *shader = " .,-~:;=!*#$@";
     char buff[BUFFSIZE];
+    size_t map_size = strlen(shader_map);
 
     for (int j = 0; j < TERMY; j++) {
         memset(buff, 0, BUFFSIZE);
@@ -30,7 +30,8 @@ void draw(Pixel **framebuff)
 
             if (px->shader > 0 && px->color != COLOR_NONE) {
                 copyinto(&c, color_map[px->color]);
-                const char s[3] = {shader[px->shader], shader[px->shader], 0};
+                const char *sym = &shader_map[px->shader];
+                const char s[3] = {*sym, *sym, 0};
                 copyinto(&c, s);
             } else
                 copyinto(&c, "  ");

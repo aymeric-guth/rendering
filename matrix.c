@@ -16,6 +16,14 @@ void Vec3_scale(Vec3 *i, float k, Vec3 *o)
     o->z = i->z * k;
 }
 
+void Vec3_cpy(Vec3 *i, Vec3 *o)
+{
+    o->x = i->x;
+    o->y = i->y;
+    o->z = i->z;
+    o->w = i->w;
+}
+
 void mat4x4_Vec3_mul(mat4x4 mat, Vec3 *i, Vec3 *o)
 {
     float x = i->x;
@@ -113,6 +121,18 @@ void get_tr_mat(Vec3 *vec, mat4x3 mat)
     mat[1][2] = 0.f;
     mat[2][2] = 1.f;
     mat[3][2] = vec->z;
+}
+void get_scale_mat(Vec3 *v, mat3x3 mat)
+{
+    mat[0][0] = v->x;
+    mat[1][0] = 0.f;
+    mat[2][0] = 0.f;
+    mat[0][1] = 0.f;
+    mat[1][1] = v->y;
+    mat[2][1] = 0.f;
+    mat[0][2] = 0.f;
+    mat[1][2] = 0.f;
+    mat[2][2] = v->z;
 }
 
 void mat3x3_mul(mat3x3 mata, mat3x3 matb, mat3x3 mat)

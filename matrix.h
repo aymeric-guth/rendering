@@ -50,6 +50,7 @@ float Vec3_dot(Vec3 *, Vec3 *);
 void Vec3_cross(Vec3 *, Vec3 *, Vec3 *);
 float Vec3_norm(Vec3 *);
 void Vec3_line(Vec3 *, Vec3 *, Vec3 *);
+void Vec3_cpy(Vec3 *i, Vec3 *o);
 
 void mat4x4_mul(mat4x4, mat4x4, mat4x4);
 
@@ -61,6 +62,7 @@ void get_yaw_mat(float, mat3x3);
 void get_pitch_mat(float, mat3x3);
 void get_roll_mat(float, mat3x3);
 void get_tr_mat(Vec3 *, mat3x3);
+void get_scale_mat(Vec3 *v, mat3x3 mat);
 
 void mat3x3_mul(mat3x3, mat3x3, mat3x3);
 

@@ -9,87 +9,87 @@ static Tri _scene[] = {
     {
         .v = {
             { .x = 0.0f, .y = 0.0f, .z = 0.0f },
-            { .x = 0.0f, .y = 1.0f, .z = 0.0f },
+            { .x = 1.0f, .y = 1.0f, .z = 0.0f },
             { .x = 1.0f, .y = 1.0f, .z = 0.0f },
         },
-        .c = COLOR_RED
+        .c = COLOR_WHITE
     },
     {
         .v = {
             { .x = 0.0f, .y = 0.0f, .z = 0.0f },
-            { .x = 1.0f, .y = 1.0f, .z = 0.0f },
+            { .x = 1.0f, .y = 0.0f, .z = 0.0f },
             { .x = 1.0f, .y = 0.0f, .z = 0.0f },
         },
-        .c = COLOR_RED
-    },
-    {
-        .v = {
-            { .x = 1.0f, .y = 0.0f, .z = 0.0f },
-            { .x = 1.0f, .y = 1.0f, .z = 0.0f },
-            { .x = 1.0f, .y = 1.0f, .z = 1.0f },
-        },
-        .c = COLOR_CYAN
+        .c = COLOR_WHITE
     },
     {
         .v = {
             { .x = 1.0f, .y = 0.0f, .z = 0.0f },
             { .x = 1.0f, .y = 1.0f, .z = 1.0f },
+            { .x = 1.0f, .y = 1.0f, .z = 1.0f },
+        },
+        .c = COLOR_WHITE
+    },
+    {
+        .v = {
+            { .x = 1.0f, .y = 0.0f, .z = 0.0f },
+            { .x = 1.0f, .y = 0.0f, .z = 1.0f },
             { .x = 1.0f, .y = 0.0f, .z = 1.0f },
         },
-        .c = COLOR_CYAN
-    },
-    {
-        .v = {
-            { .x = 1.0f, .y = 0.0f, .z = 1.0f },
-            { .x = 1.0f, .y = 1.0f, .z = 1.0f },
-            { .x = 0.0f, .y = 1.0f, .z = 1.0f },
-        },
-        .c = COLOR_GREEN
+        .c = COLOR_WHITE
     },
     {
         .v = {
             { .x = 1.0f, .y = 0.0f, .z = 1.0f },
             { .x = 0.0f, .y = 1.0f, .z = 1.0f },
+            { .x = 0.0f, .y = 1.0f, .z = 1.0f },
+        },
+        .c = COLOR_WHITE
+    },
+    {
+        .v = {
+            { .x = 1.0f, .y = 0.0f, .z = 1.0f },
+            { .x = 0.0f, .y = 0.0f, .z = 1.0f },
             { .x = 0.0f, .y = 0.0f, .z = 1.0f },
         },
-        .c = COLOR_GREEN
-    },
-    {
-        .v = {
-            { .x = 0.0f, .y = 0.0f, .z = 1.0f },
-            { .x = 0.0f, .y = 1.0f, .z = 1.0f },
-            { .x = 0.0f, .y = 1.0f, .z = 0.0f },
-        },
-        .c = COLOR_BLUE
+        .c = COLOR_WHITE
     },
     {
         .v = {
             { .x = 0.0f, .y = 0.0f, .z = 1.0f },
             { .x = 0.0f, .y = 1.0f, .z = 0.0f },
+            { .x = 0.0f, .y = 1.0f, .z = 0.0f },
+        },
+        .c = COLOR_WHITE
+    },
+    {
+        .v = {
+            { .x = 0.0f, .y = 0.0f, .z = 1.0f },
+            { .x = 0.0f, .y = 0.0f, .z = 0.0f },
             { .x = 0.0f, .y = 0.0f, .z = 0.0f },
         },
-        .c = COLOR_BLUE
+        .c = COLOR_WHITE
     },
     {
         .v = {
             { .x = 0.0f, .y = 1.0f, .z = 0.0f },
-            { .x = 0.0f, .y = 1.0f, .z = 1.0f },
+            { .x = 1.0f, .y = 1.0f, .z = 1.0f },
             { .x = 1.0f, .y = 1.0f, .z = 1.0f },
         },
-        .c = COLOR_YELLOW
+        .c = COLOR_WHITE
     },
     {
         .v = {
             { .x = 0.0f, .y = 1.0f, .z = 0.0f },
-            { .x = 1.0f, .y = 1.0f, .z = 1.0f },
+            { .x = 1.0f, .y = 1.0f, .z = 0.0f },
             { .x = 1.0f, .y = 1.0f, .z = 0.0f },
         },
-        .c = COLOR_YELLOW
+        .c = COLOR_WHITE
     },
     {
         .v = {
-            { .x = 1.0f, .y = 0.0f, .z = 1.0f },
-            { .x = 0.0f, .y = 0.0f, .z = 1.0f },
+            { .x = 1.0f, .y = 1.0f, .z = 0.0f },
+            { .x = 0.0f, .y = 0.0f, .z = 0.0f },
             { .x = 0.0f, .y = 0.0f, .z = 0.0f },
         },
         .c = COLOR_WHITE
@@ -97,7 +97,7 @@ static Tri _scene[] = {
     {
         .v = {
             { .x = 1.0f, .y = 0.0f, .z = 1.0f },
-            { .x = 0.0f, .y = 0.0f, .z = 0.0f },
+            { .x = 1.0f, .y = 0.0f, .z = 0.0f },
             { .x = 1.0f, .y = 0.0f, .z = 0.0f },
         },
         .c = COLOR_WHITE

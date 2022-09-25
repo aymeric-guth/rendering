@@ -79,7 +79,8 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
     #ifdef PERFCOUNT
     Telem t = { .drawing = 0.f, .rendering = 0.f, .input = 0.f, .transform = 0.f, .it = 0};
     #endif
-    Vec3 *camera = params->camera;
+    Vec3 camera = {0.f, 0.f, 0.f, 0.f};
+    size_t map_size = strlen(shader_map);
 
     while (running) {
         //for (;;) {
@@ -107,17 +108,19 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         t.input += delta_time(&start, &end);
         clock_gettime(CLOCK_REALTIME, &start);
         #endif
-        mat3x3 yaw_mat, pitch_mat, roll_mat, tr_mat, ofst_mat, tmp_mat, world_mat;
+        mat3x3 yaw_mat, pitch_mat, roll_mat, tr_mat, ofst_mat, tmp_mat, world_mat, scale_mat;
         mat4x4 proj_mat;
         Vec3 v0 = { .x = 0.f, .y = 0.f, .z = params->translation_ofst};
         Vec3 v1 = { .x = 1.f, .y = 1.f, .z = 0.f };
         Vec3 v2 = { .x = -0.5f, .y = -0.5f, .z = -0.5f};
+        Vec3 scale_v = { .x = (float)termx, .y = (float)termy, .z = 0.f};
         get_proj_mat(params, proj_mat);
         get_yaw_mat(tf->alpha, yaw_mat);
         get_pitch_mat(tf->beta, pitch_mat);
         get_roll_mat(tf->gamma, roll_mat);
         get_tr_mat(tf->v, tr_mat);
         get_tr_mat(&v2, ofst_mat);
+        get_scale_mat(&scale_v, scale_mat);
         mat3x3_mul(yaw_mat, pitch_mat, tmp_mat);
         mat3x3_mul(roll_mat, tmp_mat, world_mat);
         #ifdef PERFCOUNT
@@ -150,37 +153,48 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
                 Vec3_cross(&line1, &line2, &normal);
                 l = 1 / Vec3_norm(&normal);
                 Vec3_scale(&normal, l, &normal);
-                Vec3_line(camera, &tri.v[0], &v);
+                Vec3_line(&camera, &tri.v[0], &v);
 
                 if (Vec3_dot(&v, &normal) >= 0.f)
                     continue;
+
+                {
+                    // illumination
+                    Vec3 light_direction;
+                    Vec3_cpy(&camera, &light_direction);
+                    light_direction.z = -1.f;
+                    float ool = 1 / Vec3_norm(&light_direction);
+                    Vec3_scale(&light_direction, ool, &light_direction);
+                    float dp = Vec3_dot(&light_direction, &normal);
+                    tri.s = (int)((map_size - 1) * dp);
+                    tri.c = COLOR_WHITE;
+                }
             }
+
+            // 2d projection
+            Tri tp;
+            memcpy(&tp, &tri, sizeof(Tri));
 
             for (int i = 0; i < 3; i++) {
-                Vec3 *v = &tri.v[i];
+                Vec3 *v = &tp.v[i];
                 mat4x4_Vec3_mul(proj_mat, v, v);
-                // offset des coordonées dans [0., 1.]
+                // offset des coordonées de [-1., 1.] vers [0., 1.]
                 Vec3_add(v, &v1, v);
                 Vec3_scale(v, 0.5f, v);
-                // scaling des coordonées
-                v->x *= (float)termx;
-                v->y *= (float)termy;
-            }
-
-            {
-                // luminescence
-                int shader = 12;
-                tri.s = shader;
+                // scaling des coordonées à la résolution du terminal
+                mat3x3_Vec3_mul(scale_mat, v, v);
             }
 
             {
                 // rasterization ...
-                fillTriangle(fb, &tri);
-                int shader = 12;
-                int color = COLOR_WHITE;
-                drawline(fb, tri.v[0].x, tri.v[0].y, tri.v[1].x, tri.v[1].y, color, shader);
-                drawline(fb, tri.v[1].x, tri.v[1].y, tri.v[2].x, tri.v[2].y, color, shader);
-                drawline(fb, tri.v[2].x, tri.v[2].y, tri.v[1].x, tri.v[1].y, color, shader);
+                #ifndef WIREFRAME
+                fillTriangle(fb, &tp);
+                #else
+                int shader = strlen(shader_map) - 1;
+                drawline(fb, tp.v[0].x, tp.v[0].y, tp.v[1].x, tp.v[1].y, tp.c, shader);
+                drawline(fb, tp.v[1].x, tp.v[1].y, tp.v[2].x, tp.v[2].y, tp.c, shader);
+                drawline(fb, tp.v[2].x, tp.v[2].y, tp.v[1].x, tp.v[1].y, tp.c, shader);
+                #endif
             }
         }
 
@@ -198,10 +212,8 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         t.fo = idle;
         drawdebug(&t);
         t.it++;
-
-        if (idle > 0)
-            msleep((long)idle);
-
+        //if (idle > 0)
+        //    msleep((long)idle);
         #endif
     }
 
@@ -274,7 +286,6 @@ int main()
     Q q = { .head = 0, .tail = 0, .size = QUEUE_SIZE, .data = qp};
     pthread_create(&_kb_input, NULL, kb_input, &q);
     Vec3 ofst = {.x = 0.f, .y = 0.f, .z = 0.f};
-    Vec3 camera = {0.f, 0.f, 0.f, 0.f};
     Game_State state = {
         .q = &q,
         .zbuff = zbuff,
@@ -291,10 +302,9 @@ int main()
         .tf = &tf,
         .term = &term,
         .focal_distance = 10.f,
-        .translation_ofst = 1.f,
+        .translation_ofst = 10.f,
         .viewing_distance = 1000.f,
         .theta = PI * 0.5f,
-        .camera = &camera
     };
     entrypoint_tri(&state, &params);
     goto cleanup;
