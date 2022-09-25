@@ -112,7 +112,8 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         mat4x4 proj_mat;
         Vec3 v0 = { .x = 0.f, .y = 0.f, .z = params->translation_ofst};
         Vec3 v1 = { .x = 1.f, .y = 1.f, .z = 0.f };
-        Vec3 v2 = { .x = -0.5f, .y = -0.5f, .z = -0.5f};
+        //Vec3 v2 = { .x = -0.5f, .y = -0.5f, .z = -0.5f};
+        Vec3 v2 = { .x = 0.f, .y = 0.f, .z = 0.f};
         Vec3 scale_v = { .x = (float)termx, .y = (float)termy, .z = 0.f};
         get_proj_mat(params, proj_mat);
         get_yaw_mat(tf->alpha, yaw_mat);
@@ -302,7 +303,7 @@ int main()
         .tf = &tf,
         .term = &term,
         .focal_distance = 10.f,
-        .translation_ofst = 10.f,
+        .translation_ofst = 2.f,
         .viewing_distance = 1000.f,
         .theta = PI * 0.5f,
     };
