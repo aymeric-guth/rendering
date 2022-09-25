@@ -89,6 +89,7 @@ void drawline(Pixel **fb, int x1, int y1, int x2, int y2, Color c, int shader)
 
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+
 float crossProduct(Vec3 *v1, Vec3 *v2)
 {
     return v1->x * v2->y - v1->y * v2->x;

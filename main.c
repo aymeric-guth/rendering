@@ -42,6 +42,47 @@ double delta_time(struct timespec *start, struct timespec *end)
     return (end->tv_sec - start->tv_sec) + (end->tv_nsec - start->tv_nsec) / 1000000000.f;
 }
 
+void mesh_center(Mesh *m, Vec3 *v)
+{
+    float fmax = 100.f;
+    float xmin = fmax;
+    float xmax = -fmax;
+    float ymin = fmax;
+    float ymax = -fmax;
+    float zmin = fmax;
+    float zmax = -fmax;
+
+    for (int i = 0; i < m->s; i++) {
+        for (int j = 0; j < 3; j++) {
+            float x = m[i].t[j].v->x;
+            float y = m[i].t[j].v->y;
+            float z = m[i].t[j].v->z;
+
+            if (x < xmin)
+                xmin = x;
+
+            if (x > xmax)
+                xmax = x;
+
+            if (y < ymin)
+                ymin = y;
+
+            if (y > ymax)
+                ymax = y;
+
+            if (z < zmin)
+                zmin = z;
+
+            if (z > zmax)
+                zmax = z;
+        }
+    }
+
+    v->x = (xmin + xmax) * -0.5f;
+    v->y = (ymin + ymax) * -0.5f;
+    v->z = (zmin + zmax) * -0.5f;
+}
+
 int entrypoint_tri(Game_State *state, Render_Params *params)
 {
     // float **zbuff = state->zbuff;
@@ -57,8 +98,6 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
     size_t map_size = strlen(shader_map);
 
     while (running) {
-        //for (;;) {
-        // for (int n = 0; n < CYCLES; n++) {
         #ifdef PERFCOUNT
         clock_gettime(CLOCK_REALTIME, &start);
         frame_d.tv_nsec = start.tv_nsec;
@@ -74,35 +113,30 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         while (Q_get(q, &elmt) > 0)
             process_input(tf, elmt);
 
-        tf->alpha += PI / 1000;
-        tf->beta += PI / 2000;
-        tf->gamma += PI / 3000;
+        //tf->alpha += PI / 1000;
+        //tf->beta += PI / 2000;
+        //tf->gamma += PI / 3000;
         #ifdef PERFCOUNT
         clock_gettime(CLOCK_REALTIME, &end);
         t.input += delta_time(&start, &end);
         clock_gettime(CLOCK_REALTIME, &start);
         #endif
-        mat3x3 yaw_mat, pitch_mat, roll_mat, tr_mat, ofst_mat, tmp_mat, world_mat, scale_mat;
+        mat3x3 tr_mat, ofst_mat, world_mat, scale_mat;
         mat4x4 proj_mat;
-        Vec3 v0 = { .x = 0.f, .y = 0.f, .z = params->translation_ofst};
-        Vec3 v1 = { .x = 1.f, .y = 1.f, .z = 0.f };
         get_proj_mat(proj_mat, termx, termy, params->theta, params->viewing_distance, params->focal_distance);
-        get_yaw_mat(tf->alpha, yaw_mat);
-        get_pitch_mat(tf->beta, pitch_mat);
-        get_roll_mat(tf->gamma, roll_mat);
         get_tr_mat(tf->v, tr_mat);
-        {
-            // offset object center
-            // Vec3 v2 = { .x = -0.5f, .y = -0.5f, .z = -0.5f};
-            Vec3 v2 = { .x = 0.f, .y = 0.f, .z = 0.f};
-            get_tr_mat(&v2, ofst_mat);
-        }
         {
             Vec3 scale_v = { .x = (float)termx, .y = (float)termy, .z = 0.f};
             get_scale_mat(&scale_v, scale_mat);
         }
-        mat3x3_mul(yaw_mat, pitch_mat, tmp_mat);
-        mat3x3_mul(roll_mat, tmp_mat, world_mat);
+        {
+            mat3x3 yaw_mat, pitch_mat, roll_mat, tmp_mat;
+            get_yaw_mat(tf->alpha, yaw_mat);
+            get_pitch_mat(tf->beta, pitch_mat);
+            get_roll_mat(tf->gamma, roll_mat);
+            mat3x3_mul(yaw_mat, pitch_mat, tmp_mat);
+            mat3x3_mul(roll_mat, tmp_mat, world_mat);
+        }
         #ifdef PERFCOUNT
         clock_gettime(CLOCK_REALTIME, &end);
         t.transform += delta_time(&start, &end);
@@ -116,12 +150,12 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
 
             for (int i = 0; i < 3; i++) {
                 Vec3 *v = &tri.v[i];
-                // hack pour forcer la rotation sur le centre de l'objet
-                mat4x3_Vec3_mul(ofst_mat, v, v);
-                // rotation
+                // user input rotation
                 mat3x3_Vec3_mul(world_mat, v, v);
+                // user input translation
                 mat4x3_Vec3_mul(tr_mat, v, v);
                 // z-offset pour controler la distance écran - objet
+                Vec3 v0 = { .x = 0.f, .y = 0.f, .z = params->translation_ofst};
                 Vec3_add(v, &v0, v);
             }
 
@@ -163,6 +197,7 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
                 Vec3 *v = &tp.v[i];
                 mat4x4_Vec3_mul(proj_mat, v, v);
                 // offset des coordonées de [-1., 1.] vers [0., 1.]
+                Vec3 v1 = { .x = 1.f, .y = 1.f, .z = 0.f };
                 Vec3_add(v, &v1, v);
                 Vec3_scale(v, 0.5f, v);
                 // scaling des coordonées à la résolution du terminal
@@ -270,6 +305,24 @@ int main()
     pthread_t _kb_input;
     Q q = { .head = 0, .tail = 0, .size = QUEUE_SIZE, .data = qp};
     pthread_create(&_kb_input, NULL, kb_input, &q);
+    {
+        Vec3 ofst = {.x = 0.f, .y = 0.f, .z = 0.f};
+        mesh_center(mesh, &ofst);
+        mat3x3 tr_mat;
+        get_tr_mat(&ofst, tr_mat);
+
+        // hack pour forcer la rotation sur le centre de l'objet
+        // mat4x3_Vec3_mul(ofst_mat, v, v);
+        for (int i = 0; i < mesh->s; i++) {
+            for (int j = 0; j < 3; j++) {
+                Vec3 *v = &(mesh[i].t->v[j]);
+                mat4x3_Vec3_mul(tr_mat, v, v);
+            }
+        }
+
+        //printf("ofst(x=%f, y=%f, z=%f)\n", ofst.x, ofst.y, ofst.z);
+        //goto cleanup;
+    }
     Vec3 ofst = {.x = 0.f, .y = 0.f, .z = 0.f};
     Game_State state = {
         .q = &q,
@@ -287,7 +340,7 @@ int main()
         .tf = &tf,
         .term = &term,
         .focal_distance = 10.f,
-        .translation_ofst = 2.f,
+        .translation_ofst = 5.f,
         .viewing_distance = 1000.f,
         .theta = PI * 0.5f,
     };
