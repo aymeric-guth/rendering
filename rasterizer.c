@@ -98,15 +98,19 @@ float crossProduct(Vec3 *v1, Vec3 *v2)
 // Fill a triangle - Bresenham method
 // Original from http://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html
 // http://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html
-void fillTriangle(Pixel **fb, Tri *tri)
+void fillTriangle(Pixel **fb, float **zbuff, Tri *tri)
 {
     int x1, y1, x2, y2, x3, y3;
+    float z1, z2, z3;
     x1 = tri->v[0].x;
     y1 = tri->v[0].y;
+    z1 = tri->v[0].z;
     x2 = tri->v[1].x;
     y2 = tri->v[1].y;
+    z2 = tri->v[0].z;
     x3 = tri->v[2].x;
     y3 = tri->v[2].y;
+    z3 = tri->v[0].z;
     /* get the bounding box of the triangle */
     int maxX = MAX(x1, MAX(x2, x3));
     int minX = MIN(x1, MIN(x2, x3));

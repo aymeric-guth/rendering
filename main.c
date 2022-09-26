@@ -85,7 +85,7 @@ void mesh_center(Mesh *m, Vec3 *v)
 
 int entrypoint_tri(Game_State *state, Render_Params *params)
 {
-    // float **zbuff = state->zbuff;
+    float **zbuff = state->zbuff;
     Q *q = state->q;
     Mesh *mesh = state->mesh;
     Pixel **fb = state->framebuff;
@@ -204,10 +204,17 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
                 mat3x3_Vec3_mul(scale_mat, v, v);
             }
 
+            // clipping
+            // {
+            //     float q = params->viewing_distance / (params->viewing_distance - params->focal_distance);
+            //     float zmax = -params->focal_distance * q;
+            //     if (tri.v[0].z <= zmax || tri.v[1].z <= zmax || tri.v[2].z <= zmax)
+            //         continue;
+            // }
             {
                 // rasterization
                 #ifndef WIREFRAME
-                fillTriangle(fb, &tp);
+                fillTriangle(fb, zbuff, &tp);
                 #else
                 int shader = strlen(shader_map) - 1;
                 drawline(fb, tp.v[0].x, tp.v[0].y, tp.v[1].x, tp.v[1].y, tp.c, shader);
@@ -305,23 +312,19 @@ int main()
     pthread_t _kb_input;
     Q q = { .head = 0, .tail = 0, .size = QUEUE_SIZE, .data = qp};
     pthread_create(&_kb_input, NULL, kb_input, &q);
+    // hack pour forcer la rotation sur le centre de l'objet
     {
         Vec3 ofst = {.x = 0.f, .y = 0.f, .z = 0.f};
         mesh_center(mesh, &ofst);
         mat3x3 tr_mat;
         get_tr_mat(&ofst, tr_mat);
 
-        // hack pour forcer la rotation sur le centre de l'objet
-        // mat4x3_Vec3_mul(ofst_mat, v, v);
         for (int i = 0; i < mesh->s; i++) {
             for (int j = 0; j < 3; j++) {
                 Vec3 *v = &(mesh[i].t->v[j]);
                 mat4x3_Vec3_mul(tr_mat, v, v);
             }
         }
-
-        //printf("ofst(x=%f, y=%f, z=%f)\n", ofst.x, ofst.y, ofst.z);
-        //goto cleanup;
     }
     Vec3 ofst = {.x = 0.f, .y = 0.f, .z = 0.f};
     Game_State state = {
