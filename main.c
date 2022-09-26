@@ -160,6 +160,18 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
             }
 
             {
+                // clipping
+                // float q = params->viewing_distance / (params->viewing_distance - params->focal_distance);
+                // float zmin = -params->focal_distance * q;
+                // float zmin = 0.1f;
+                // float z1 = tri.v[0].z;
+                // float z2 = tri.v[1].z;
+                // float z3 = tri.v[2].z;
+                // if (z1 <= zmin || z2 <= zmin || z3 <= zmin)
+                //     continue;
+            }
+
+            {
                 Vec3 normal, line1, line2, vn1, vn2, vn3;
                 float l;
                 Vec3_line(&tri.v[0], &tri.v[1], &line1);
@@ -204,13 +216,6 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
                 mat3x3_Vec3_mul(scale_mat, v, v);
             }
 
-            // clipping
-            // {
-            //     float q = params->viewing_distance / (params->viewing_distance - params->focal_distance);
-            //     float zmax = -params->focal_distance * q;
-            //     if (tri.v[0].z <= zmax || tri.v[1].z <= zmax || tri.v[2].z <= zmax)
-            //         continue;
-            // }
             {
                 // rasterization
                 #ifndef WIREFRAME
