@@ -1,6 +1,7 @@
 session_name: $PROJECT_NAME
 start_directory: $WORKSPACE
 environment:
+  WORKSPACE: $WORKSPACE
   PROJECT_NAME: $PROJECT_NAME
 
 shell_command_before:
