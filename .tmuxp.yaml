@@ -6,6 +6,7 @@ environment:
 
 shell_command_before:
 - '[ -f .func.sh ] && source .func.sh'
+
 windows:
 
   - window_name: editor
