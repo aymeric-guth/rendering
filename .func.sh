@@ -1,19 +1,23 @@
 #!/bin/sh
 
+[ -f "$DOTFILES/funcs/project_c.sh" ] && . "$DOTFILES/funcs/project_c.sh"
+
+clean() {
+  # c_project_clean || return 1
+  c_clean || return 1
+}
+
 build() {
-  [ ! "$(basename "$PWD")" = "$PROJECT_NAME" ] && return 1
-  rm -rf ./build && mkdir ./build || return 1
-  cmake \
-    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-    -S . \
-    -B ./build \
-    -G Ninja \
-    && ninja \
-    -C ./build
+  c_clean || return 1
+  c_build_cmake || return 1
+}
+
+gen() {
+  c_tools_gen || return 1
 }
 
 run() {
-  [ ! "$(basename "$PWD")" = "$PROJECT_NAME" ] && return 1
+  c_project_run || return 1
   # OBJ_FILE="cube.obj" python3 obj_loader.py || return 1
   OBJ_FILE="teapot2.obj" python3 obj_loader.py || return 1
   build || return 1
