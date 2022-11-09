@@ -202,3 +202,55 @@ void Vec3_line(Vec3 *i1, Vec3 *i2, Vec3 *o)
     o->y = i2->y - i1->y;
     o->z = i2->z - i1->z;
 }
+
+void Quat_conjugate(Quat *q1, Quat *q2)
+{
+    q2->w = q1->w;
+    q2->x = -1 * q1->x;
+    q2->y = -1 * q1->y;
+    q2->z = -1 * q1->z;
+}
+
+void Quat_Vec3_mul(Quat *q, Vec3 *i, Vec3 *o)
+{
+    Quat qv = { .w = 0.f, .x = i->x, .y = i->y, .z = i->z};
+    Quat qv1, qv2, qv3;
+    Quat_mul(q, &qv, &qv1);
+    Quat_conjugate(q, &qv2);
+    Quat_mul(&qv1, &qv2, &qv3);
+    o->w = qv3.w;
+    o->x = qv3.x;
+    o->y = qv3.y;
+    o->z = qv3.z;
+}
+
+void Quat_mul(Quat *q1, Quat *q2, Quat *o)
+{
+    o->w = q1->w * q2->w - q1->x * q2->x - q1->y * q2->y - q1->z * q2->z;
+    o->x = q1->w * q2->x + q1->x * q2->w + q1->y * q2->z - q1->z * q2->y;
+    o->y = q1->w * q2->y + q1->y * q2->w + q1->z * q2->x - q1->x * q2->z;
+    o->z = q1->w * q2->z + q1->z * q2->w + q1->x * q2->y - q1->y * q2->x;
+}
+
+void euler_to_Quat(float phi, float theta, float psi, Quat *q)
+{
+    q->w = cosf(phi / 2) * cosf(theta / 2) * cosf(psi / 2) + sinf(phi / 2) * sinf(theta / 2) * sinf(psi / 2);
+    q->x = sinf(phi / 2) * cosf(theta / 2) * cosf(psi / 2) - cosf(phi / 2) * sinf(theta / 2) * sinf(psi / 2);
+    q->y = cosf(phi / 2) * sinf(theta / 2) * cosf(psi / 2) + sinf(phi / 2) * cosf(theta / 2) * sinf(psi / 2);
+    q->z = cosf(phi / 2) * cosf(theta / 2) * sinf(psi / 2) - sinf(phi / 2) * sinf(theta / 2) * cosf(psi / 2);
+}
+
+
+void Quat_to_euler(Quat *q, Vec3 *o)
+{
+    float t0 = 2. * (q->w * q->x + q->y * q->z);
+    float t1 = 1. - 2. * (q->x * q->x + q->y * q->y);
+    o->x = atan2(t0, t1);
+    float t2 = 2. * (q->w * q->y - q->z * q->x);
+    t2 = t2 > 1. ? 1. : t2;
+    t2 = t2 < -1. ? -1. : t2;
+    o->y = asin(t2);
+    float t3 = 2 * (q->w * q->z + q->x * q->y);
+    float t4 = 1. - 2. * (q->y * q->y + q->z * q->z);
+    o->z = atan2(t3, t4);
+}

@@ -125,18 +125,20 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
         mat4x4 proj_mat;
         get_proj_mat(proj_mat, termx, termy, params->theta, params->viewing_distance, params->focal_distance);
         get_tr_mat(tf->v, tr_mat);
+        Quat q1;
+        euler_to_Quat(tf->alpha, tf->beta, tf->gamma, &q1);
         {
             Vec3 scale_v = { .x = (float)termx, .y = (float)termy, .z = 0.f};
             get_scale_mat(&scale_v, scale_mat);
         }
-        {
-            mat3x3 yaw_mat, pitch_mat, roll_mat, tmp_mat;
-            get_yaw_mat(tf->alpha, yaw_mat);
-            get_pitch_mat(tf->beta, pitch_mat);
-            get_roll_mat(tf->gamma, roll_mat);
-            mat3x3_mul(yaw_mat, pitch_mat, tmp_mat);
-            mat3x3_mul(roll_mat, tmp_mat, world_mat);
-        }
+        // {
+        //     mat3x3 yaw_mat, pitch_mat, roll_mat, tmp_mat;
+        //     get_yaw_mat(tf->alpha, yaw_mat);
+        //     get_pitch_mat(tf->beta, pitch_mat);
+        //     get_roll_mat(tf->gamma, roll_mat);
+        //     mat3x3_mul(yaw_mat, pitch_mat, tmp_mat);
+        //     mat3x3_mul(roll_mat, tmp_mat, world_mat);
+        // }
         #ifdef PERFCOUNT
         clock_gettime(CLOCK_REALTIME, &end);
         t.transform += delta_time(&start, &end);
@@ -151,7 +153,8 @@ int entrypoint_tri(Game_State *state, Render_Params *params)
             for (int i = 0; i < 3; i++) {
                 Vec3 *v = &tri.v[i];
                 // user input rotation
-                mat3x3_Vec3_mul(world_mat, v, v);
+                Quat_Vec3_mul(&q1, v, v);
+                // mat3x3_Vec3_mul(world_mat, v, v);
                 // user input translation
                 mat4x3_Vec3_mul(tr_mat, v, v);
                 // z-offset pour controler la distance écran - objet

@@ -41,6 +41,13 @@ typedef float mat4x4[4][4];
 typedef float mat4x3[4][3];
 typedef float mat3x3[3][3];
 
+typedef struct {
+    float w;
+    float x;
+    float y;
+    float z;
+} Quat;
+
 float Vec2_cross(Vec2 *a, Vec2 *b);
 
 void Vec3_add(Vec3 *, Vec3 *, Vec3 *);
@@ -66,5 +73,10 @@ void get_scale_mat(Vec3 *v, mat3x3 mat);
 void get_proj_mat(mat4x4 mat, int termx, int termy, float theta, float viewing_distance, float focal_distance);
 
 void mat3x3_mul(mat3x3, mat3x3, mat3x3);
+
+void Quat_mul(Quat *q1, Quat *q2, Quat *o);
+void Quat_conjugate(Quat *q1, Quat *q2);
+void Quat_Vec3_mul(Quat *q, Vec3 *i, Vec3 *o);
+void euler_to_Quat(float phi, float theta, float psi, Quat *q);
 
 #endif
