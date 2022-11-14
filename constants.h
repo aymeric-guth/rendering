@@ -20,7 +20,7 @@ typedef enum {
 #define ROT_STEP PI / 75.f;
 #define TR_STEP 0.1f;
 #define PERFCOUNT
-#define WIREFRAME
+//#define WIREFRAME
 #define HASCOLOR
 
 #endif
